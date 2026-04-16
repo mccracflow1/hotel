@@ -16,7 +16,10 @@
       "Bash(node -e ':*)",
       "Bash(echo \"Exit code: $?\")",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git remote:*)",
+      "Bash(git push:*)",
+      "Bash(ssh -T git@github.com)"
     ]
   }
 }
