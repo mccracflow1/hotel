@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -File \".specify/scripts/powershell/check-prerequisites.ps1\" -Json -RequireTasks -IncludeTasks)",
+      "Bash(git -C \"C:\\\\Users\\\\hfrodrigueac\\\\Desktop\\\\proyectos\\\\hotel\" rev-parse --git-dir)",
+      "Bash(touch \"C:\\\\Users\\\\hfrodrigueac\\\\Desktop\\\\proyectos\\\\hotel\\\\backend\\\\src\\\\modules\\\\${module}\\\\${module}.controller.js\")",
+      "Bash(touch \"C:\\\\Users\\\\hfrodrigueac\\\\Desktop\\\\proyectos\\\\hotel\\\\backend\\\\src\\\\modules\\\\${module}\\\\${module}.service.js\")",
+      "Bash(touch \"C:\\\\Users\\\\hfrodrigueac\\\\Desktop\\\\proyectos\\\\hotel\\\\backend\\\\src\\\\modules\\\\${module}\\\\${module}.repository.js\")",
+      "Bash(touch \"C:\\\\Users\\\\hfrodrigueac\\\\Desktop\\\\proyectos\\\\hotel\\\\backend\\\\src\\\\modules\\\\${module}\\\\${module}.routes.js\")",
+      "Bash(powershell:*)",
+      "Bash(xargs rm:*)",
+      "Bash(mkdir -p /c/Users/hfrodrigueac/Desktop/proyectos/hotel/.claude/skills/speckit-document)",
+      "Bash(mkdir -p /c/Users/hfrodrigueac/Desktop/proyectos/hotel/.claude/skills/speckit-atomic-commit)",
+      "Bash(npm install:*)",
+      "Bash(node -e \"require\\('uuid'\\)\")",
+      "Bash(node -e ':*)",
+      "Bash(echo \"Exit code: $?\")",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}
