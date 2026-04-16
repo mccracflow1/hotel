@@ -56,6 +56,18 @@ const seasonsRepository = {
     await this.findById(id);
     return db('seasons').where({ id }).delete();
   },
+
+  /** @returns {Promise<number>} cantidad de temporadas solapadas (excluyendo excludeId) */
+  async countOverlapping(dateStart, dateEnd, excludeId) {
+    let q = db('seasons')
+      .where('date_start', '<=', dateEnd)
+      .where('date_end', '>=', dateStart);
+    if (excludeId) {
+      q = q.whereNot({ id: excludeId });
+    }
+    const row = await q.count('id as c').first();
+    return Number(row?.c || 0);
+  },
 };
 
 module.exports = seasonsRepository;
