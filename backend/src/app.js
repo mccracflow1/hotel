@@ -53,13 +53,14 @@ app.use('/api/v1/rooms', require('./modules/rooms/rooms.routes'));
 app.use('/api/v1/plans', require('./modules/plans/plans.routes'));
 app.use('/api/v1/optional-activities', require('./modules/plans/optional-activities.routes'));
 app.use('/api/v1/reservations', require('./modules/reservations/reservations.routes'));
-// Se irán habilitando a medida que se implementen
-// app.use('/api/v1/payments',     require('./modules/payments/payments.routes'));
-// app.use('/api/v1/inventory',    require('./modules/inventory/inventory.routes'));
-// app.use('/api/v1/media',        require('./modules/media/media.routes'));
-// app.use('/api/v1/cms',          require('./modules/cms/cms.routes'));
-// app.use('/api/v1/users',        require('./modules/users/users.routes'));
-// app.use('/api/v1/reports',      require('./modules/reports/reports.routes'));
+app.use('/api/v1/inventory', require('./modules/inventory/inventory.routes'));
+app.use('/api/v1/suppliers', require('./modules/suppliers/suppliers.routes'));
+app.use('/api/v1/users', require('./modules/users/users.routes'));
+app.use('/api/v1/business-config', require('./modules/business-config/business-config.routes'));
+app.use('/api/v1/reports', require('./modules/reports/reports.routes'));
+// app.use('/api/v1/payments', require('./modules/payments/payments.routes'));
+// app.use('/api/v1/media', require('./modules/media/media.routes'));
+// app.use('/api/v1/cms', require('./modules/cms/cms.routes'));
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
 app.use((req, res) => {

@@ -42,6 +42,12 @@ const swaggerDocument = {
       },
     },
     '/v1/reservations': {
+      get: {
+        summary: 'List reservations (RBAC)',
+        tags: ['Reservations'],
+        security: [{ BearerAuth: [] }],
+        responses: { 200: { description: 'OK' } },
+      },
       post: {
         summary: 'Create reservation (idempotent)',
         tags: ['Reservations'],
@@ -55,6 +61,107 @@ const swaggerDocument = {
           },
         ],
         responses: { 201: { description: 'Created' }, 200: { description: 'Idempotent replay' } },
+      },
+    },
+    '/v1/inventory/items': {
+      get: {
+        summary: 'List inventory items',
+        tags: ['Inventory'],
+        security: [{ BearerAuth: [] }],
+        responses: { 200: { description: 'OK' } },
+      },
+      post: {
+        summary: 'Create inventory item',
+        tags: ['Inventory'],
+        security: [{ BearerAuth: [] }],
+        responses: { 201: { description: 'Created' } },
+      },
+    },
+    '/v1/inventory/movements': {
+      post: {
+        summary: 'Apply stock movement (idempotent)',
+        tags: ['Inventory'],
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          { name: 'Idempotency-Key', in: 'header', required: true, schema: { type: 'string' } },
+        ],
+        responses: { 201: { description: 'Created' }, 200: { description: 'Idempotent replay' } },
+      },
+    },
+    '/v1/suppliers': {
+      get: {
+        summary: 'List suppliers',
+        tags: ['Suppliers'],
+        security: [{ BearerAuth: [] }],
+        responses: { 200: { description: 'OK' } },
+      },
+      post: {
+        summary: 'Create supplier',
+        tags: ['Suppliers'],
+        security: [{ BearerAuth: [] }],
+        responses: { 201: { description: 'Created' } },
+      },
+    },
+    '/v1/users': {
+      get: {
+        summary: 'List users (ADMIN)',
+        tags: ['Users'],
+        security: [{ BearerAuth: [] }],
+        responses: { 200: { description: 'OK' } },
+      },
+    },
+    '/v1/users/me': {
+      get: {
+        summary: 'Current user profile',
+        tags: ['Users'],
+        security: [{ BearerAuth: [] }],
+        responses: { 200: { description: 'OK' } },
+      },
+    },
+    '/v1/business-config': {
+      get: {
+        summary: 'Business configuration',
+        tags: ['BusinessConfig'],
+        security: [{ BearerAuth: [] }],
+        responses: { 200: { description: 'OK' } },
+      },
+      put: {
+        summary: 'Update business configuration',
+        tags: ['BusinessConfig'],
+        security: [{ BearerAuth: [] }],
+        responses: { 200: { description: 'OK' } },
+      },
+    },
+    '/v1/reports/occupancy': {
+      get: {
+        summary: 'Occupancy report',
+        tags: ['Reports'],
+        security: [{ BearerAuth: [] }],
+        responses: { 200: { description: 'OK' } },
+      },
+    },
+    '/v1/reports/revenue': {
+      get: {
+        summary: 'Revenue report (preliminary)',
+        tags: ['Reports'],
+        security: [{ BearerAuth: [] }],
+        responses: { 200: { description: 'OK' } },
+      },
+    },
+    '/v1/reports/reservations': {
+      get: {
+        summary: 'Reservations detail report',
+        tags: ['Reports'],
+        security: [{ BearerAuth: [] }],
+        responses: { 200: { description: 'OK' } },
+      },
+    },
+    '/v1/reports/inventory': {
+      get: {
+        summary: 'Inventory movements report',
+        tags: ['Reports'],
+        security: [{ BearerAuth: [] }],
+        responses: { 200: { description: 'OK' } },
       },
     },
     '/health': {
