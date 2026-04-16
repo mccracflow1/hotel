@@ -1,7 +1,6 @@
 'use strict';
 
 const crypto = require('crypto');
-const { v4: uuidv4 } = require('uuid');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
@@ -63,7 +62,7 @@ const authService = {
     if (!valid) throw new UnauthorizedError('INVALID_CREDENTIALS');
 
     const accessToken = _generateAccessToken(user);
-    const rawRefresh = uuidv4();
+    const rawRefresh = crypto.randomUUID();
     const tokenHash = _hashToken(rawRefresh);
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
@@ -113,7 +112,7 @@ const authService = {
     // Emitir nuevo par de tokens
     const user = { id: stored.user_id, email: stored.email, role: stored.role };
     const accessToken = _generateAccessToken(user);
-    const rawRefresh = uuidv4();
+    const rawRefresh = crypto.randomUUID();
     const newHash = _hashToken(rawRefresh);
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
@@ -128,7 +127,7 @@ const authService = {
     // No revelar si el email existe o no
     if (!user) return;
 
-    const rawToken = uuidv4();
+    const rawToken = crypto.randomUUID();
     const tokenHash = _hashToken(rawToken);
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
 

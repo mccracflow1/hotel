@@ -14,6 +14,49 @@ const swaggerDocument = {
     },
   ],
   paths: {
+    '/v1/rooms': {
+      get: {
+        summary: 'List rooms (public or admin with Bearer)',
+        tags: ['Rooms'],
+        responses: { 200: { description: 'OK' } },
+      },
+      post: {
+        summary: 'Create room (ADMIN)',
+        tags: ['Rooms'],
+        security: [{ BearerAuth: [] }],
+        responses: { 201: { description: 'Created' } },
+      },
+    },
+    '/v1/plans': {
+      get: {
+        summary: 'List plans',
+        tags: ['Plans'],
+        responses: { 200: { description: 'OK' } },
+      },
+    },
+    '/v1/optional-activities': {
+      get: {
+        summary: 'Global optional activities catalog',
+        tags: ['OptionalActivities'],
+        responses: { 200: { description: 'OK' } },
+      },
+    },
+    '/v1/reservations': {
+      post: {
+        summary: 'Create reservation (idempotent)',
+        tags: ['Reservations'],
+        security: [{ BearerAuth: [] }],
+        parameters: [
+          {
+            name: 'Idempotency-Key',
+            in: 'header',
+            required: true,
+            schema: { type: 'string' },
+          },
+        ],
+        responses: { 201: { description: 'Created' }, 200: { description: 'Idempotent replay' } },
+      },
+    },
     '/health': {
       get: {
         summary: 'Health Check',

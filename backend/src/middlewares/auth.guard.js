@@ -52,4 +52,25 @@ function requireRoles(...allowedRoles) {
   };
 }
 
-module.exports = { authGuard, requireRoles };
+/**
+ * optionalAuth — si hay Bearer válido, adjunta req.user; si no, sigue sin error.
+ */
+async function optionalAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return next();
+  }
+  const token = authHeader.slice(7);
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+    const user = await db('users').where({ id: payload.sub, is_active: true }).first();
+    if (user) {
+      req.user = { id: user.id, email: user.email, role: user.role, is_active: user.is_active };
+    }
+  } catch {
+    // Token inválido: tratar como usuario anónimo para rutas públicas opcionales
+  }
+  return next();
+}
+
+module.exports = { authGuard, optionalAuth, requireRoles };

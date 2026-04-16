@@ -2,7 +2,8 @@
 
 <!-- 
   Sync Impact Report
-  - Version change: Initial -> 1.0.0
+  - Version change: 1.0.0 -> 1.1.0 (2026-04-16): Principles II, III, IV clarified — idempotency scope, snapshots at reservation creation, audit user_id contract
+  - Version change (historical): Initial -> 1.0.0
   - Added principles: 
     - I. API-First & Single Source of Truth
     - II. Idempotency & Transactional Integrity
@@ -24,13 +25,13 @@
 The API is the only gateway to the data layer. Direct database access from any frontend (Landing, Portal) or external agent (n8n Sofia) is strictly prohibited. All business logic MUST be encapsulated within the Node.js backend to ensure consistency across the Landing Page, Admin Portal, and AI Agent interaction channels.
 
 ### II. Idempotency & Transactional Integrity
-Critical operations (reservations, payments) MUST be idempotent. Every mutation request includes an `Idempotency-Key` header to prevent duplicate processing. Database mutations must use strict transactions with pessimistic locking (`SELECT FOR UPDATE SKIP LOCKED`) to prevent overbooking and race conditions in a concurrent environment.
+Critical operations (**reservations**, **payments**, and any mutation where duplicate processing would cause financial or inventory inconsistency) MUST be idempotent: the client MUST send an `Idempotency-Key` header and the server MUST return the same response for retries within the key’s validity window. Other write operations (e.g. catalog CRUD) SHOULD use idempotency when duplicate submits are likely. Database mutations for availability-sensitive flows MUST use strict transactions with pessimistic locking (`SELECT FOR UPDATE SKIP LOCKED` or equivalent) to prevent overbooking and race conditions.
 
 ### III. Immutable Data Snapshots
-Upon reservation confirmation, all plan activities and pricing MUST be captured in an immutable snapshot (`reservation_activity_snapshot`). Master data changes (plans, activities, prices) MUST NOT retroactively modify existing reservations, ensuring historical accuracy and customer trust.
+When a **reservation is created**, all plan base activities and optional activity pricing relevant to that booking MUST be captured in immutable rows (`reservation_activity_snapshot`, `reservation_optional_activities`). Later state transitions (e.g. confirmation or payment) MUST NOT replace or rewrite those snapshot rows. Master data changes (plans, activities, catalog prices) MUST NOT retroactively modify existing reservations, ensuring historical accuracy and customer trust.
 
 ### IV. Strict Security & Role-Based Access Control (RBAC)
-Authentication is mandatory via JWT (short-lived access tokens + httpOnly refresh tokens). Access is restricted by a strict RBAC matrix: `SUPER_ADMIN`, `ADMIN`, `BUSINESS`, `VIEWER`, and `AGENT`. Every critical state change (INSERT, UPDATE, DELETE) MUST generate an audit log entry for accountability.
+Authentication is mandatory via JWT (short-lived access tokens + httpOnly refresh tokens). Access is restricted by a strict RBAC matrix: `SUPER_ADMIN`, `ADMIN`, `BUSINESS`, `VIEWER`, and `AGENT`. Every critical state change (INSERT, UPDATE, DELETE) MUST generate an audit log entry for accountability, including the **acting user** when the change is performed through the API (persisted in `audit_logs.user_id` via the application–database contract, e.g. transaction-local `set_config` consumed by `log_changes()`).
 
 ### V. MCP-Driven IA Autonomy
 The AI Agent (Sofia) must remain stateless regarding business logic and data. It interacts with the system exclusively through a Model Context Protocol (MCP) server that exposes validated tools. The agent must never have direct write access to the database or bypass API security and validation layers.
@@ -56,4 +57,4 @@ The Admin Portal (Angular 17+) MUST use standalone components and Signals for st
 ## Governance
 This Constitution is the supreme architectural authority for the Sofia project. Every Pull Request must be audited against these principles. Architectural complexity must be justified; YAGNI (You Ain't Gonna Need It) is the default stance for all technical decisions.
 
-**Version**: 1.0.0 | **Ratified**: 2026-04-16 | **Last Amended**: 2026-04-16
+**Version**: 1.1.0 | **Ratified**: 2026-04-16 | **Last Amended**: 2026-04-16

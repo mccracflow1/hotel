@@ -1,0 +1,407 @@
+openapi: 3.0.3
+info:
+  title: Sofia Hotel API — Rooms, Plans, Reservations (003)
+  version: 0.1.0
+  description: >
+    Contratos REST previstos para la feature 003. Los paths asumen prefijo `/api/v1`.
+    Autenticación Bearer JWT salvo endpoints marcados como public.
+
+servers:
+  - url: https://api.example.com/api/v1
+    description: Producción (placeholder)
+  - url: http://localhost:3000/api/v1
+    description: Local (ajustar puerto)
+
+tags:
+  - name: Rooms
+  - name: Plans
+  - name: OptionalActivities
+  - name: Reservations
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string, example: VALIDATION_ERROR }
+            message: { type: string }
+            details: { nullable: true }
+
+    Room:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        slug: { type: string }
+        type: { type: string, enum: [cabin, room, pasadia, additional] }
+        description: { type: string, nullable: true }
+        capacity: { type: integer }
+        base_price: { type: number }
+        is_active: { type: boolean }
+        cover_media_url: { type: string, nullable: true }
+
+    PlanSummary:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        slug: { type: string }
+        base_price: { type: number }
+        price_unit: { type: string }
+        max_persons: { type: integer }
+        is_active: { type: boolean }
+
+    PlanActivity:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        extra_cost: { type: number }
+        sort_order: { type: integer }
+
+    PlanOptional:
+      type: object
+      properties:
+        optional_activity_id: { type: string, format: uuid }
+        name: { type: string }
+        price: { type: number }
+        price_unit: { type: string }
+        is_default: { type: boolean }
+
+    PlanDetail:
+      allOf:
+        - $ref: '#/components/schemas/PlanSummary'
+        - type: object
+          properties:
+            long_desc: { type: string, nullable: true }
+            base_activities:
+              type: array
+              items: { $ref: '#/components/schemas/PlanActivity' }
+            optional_activities:
+              type: array
+              items: { $ref: '#/components/schemas/PlanOptional' }
+              description: >
+                Orden de respuesta obligatorio para FR-012 — primero is_default true,
+                luego por nombre ascendente.
+
+    ReorderPlanActivitiesRequest:
+      type: object
+      required: [ordered_activity_ids]
+      properties:
+        ordered_activity_ids:
+          type: array
+          items: { type: string, format: uuid }
+          description: IDs de plan_activities en el nuevo orden total.
+
+    DeletePlanActivityImpactResponse:
+      type: object
+      properties:
+        affected_future_reservation_count: { type: integer, minimum: 0 }
+        plan_activity_id: { type: string, format: uuid }
+
+    OptionalActivityCatalogItem:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        price: { type: number }
+        price_unit: { type: string }
+        is_active: { type: boolean }
+
+    CreateReservationRequest:
+      type: object
+      required: [customer_name, customer_document, customer_phone, date_start, adults, total_amount]
+      properties:
+        plan_id: { type: string, format: uuid, nullable: true }
+        room_id: { type: string, format: uuid, nullable: true }
+        customer_name: { type: string }
+        customer_document: { type: string }
+        customer_email: { type: string, nullable: true }
+        customer_phone: { type: string }
+        date_start: { type: string, format: date }
+        date_end: { type: string, format: date, nullable: true }
+        adults: { type: integer, minimum: 1 }
+        children: { type: integer, minimum: 0, default: 0 }
+        notes: { type: string, nullable: true }
+        optional_activity_ids:
+          type: array
+          items: { type: string, format: uuid }
+          description: Subset válido según plan_optional_activities del plan elegido.
+
+    ReservationCreated:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        reservation_number: { type: string, example: HT-2026-00001 }
+        status: { type: string, enum: [PENDING] }
+        total_amount: { type: number }
+        plan_id: { type: string, format: uuid, nullable: true }
+        room_id: { type: string, format: uuid, nullable: true }
+
+  parameters:
+    ConfirmImpactHeader:
+      name: X-Confirm-Impact
+      in: header
+      required: true
+      schema:
+        type: string
+        enum: ['true']
+      description: >
+        FR-009 — el cliente DEBE enviar `true` tras revisar el conteo devuelto por GET …/delete-impact.
+
+paths:
+  /rooms:
+    get:
+      tags: [Rooms]
+      summary: Catálogo público de habitaciones activas
+      security: []
+      responses:
+        '200':
+          description: Lista filtrada (is_active, sin deleted_at)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Room' }
+
+    post:
+      tags: [Rooms]
+      summary: Crear habitación (ADMIN, SUPER_ADMIN)
+      security: [{ bearerAuth: [] }]
+      responses:
+        '201':
+          description: Creada
+        '403':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /rooms/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    patch:
+      tags: [Rooms]
+      summary: Actualizar habitación (ADMIN, SUPER_ADMIN)
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: OK }
+        '403':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+    delete:
+      tags: [Rooms]
+      summary: Soft delete habitación (ADMIN, SUPER_ADMIN)
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: Eliminación lógica aplicada }
+
+  /plans:
+    get:
+      tags: [Plans]
+      summary: Listar planes activos (público o autenticado según decisión de producto)
+      security: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/PlanSummary' }
+
+    post:
+      tags: [Plans]
+      summary: Crear plan (ADMIN, SUPER_ADMIN)
+      security: [{ bearerAuth: [] }]
+      responses:
+        '201': { description: Creado }
+
+  /plans/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [Plans]
+      summary: Detalle de plan con actividades base y opcionales ordenadas (FR-007, FR-012)
+      security: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/PlanDetail' }
+
+  /plans/{id}/activities/reorder:
+    post:
+      tags: [Plans]
+      summary: Reordenar actividades base en lote (FR-008)
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReorderPlanActivitiesRequest' }
+      responses:
+        '204': { description: Orden actualizado }
+
+  /plans/{id}/activities/{activityId}/delete-impact:
+    get:
+      tags: [Plans]
+      summary: Impacto de eliminar actividad base (FR-009)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: activityId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/DeletePlanActivityImpactResponse' }
+
+  /plans/{id}/clone:
+    post:
+      tags: [Plans]
+      summary: Duplicar plan — copia actividades base, sin opcionales (FR-013)
+      security: [{ bearerAuth: [] }]
+      responses:
+        '201':
+          description: Nuevo plan creado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/PlanSummary' }
+
+  /plans/{id}/activities/{activityId}:
+    delete:
+      tags: [Plans]
+      summary: Eliminar actividad base del plan (FR-009) — requiere GET previo a …/delete-impact y cabecera de confirmación
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: activityId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: '#/components/parameters/ConfirmImpactHeader'
+      responses:
+        '204': { description: Actividad base eliminada del plan }
+        '400':
+          description: Falta confirmación o validación de negocio
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /optional-activities:
+    get:
+      tags: [OptionalActivities]
+      summary: Catálogo global de actividades opcionales (FR-010)
+      security: []
+      description: >
+        Implementación puede restringir listado público a `is_active=true` y exponer listado completo solo a ADMIN/SUPER_ADMIN vía query o ruta admin duplicada.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/OptionalActivityCatalogItem' }
+    post:
+      tags: [OptionalActivities]
+      summary: Crear ítem en catálogo global (ADMIN, SUPER_ADMIN)
+      security: [{ bearerAuth: [] }]
+      responses:
+        '201': { description: Creado }
+
+  /optional-activities/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    patch:
+      tags: [OptionalActivities]
+      summary: Actualizar actividad opcional global (ADMIN, SUPER_ADMIN)
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: OK }
+    delete:
+      tags: [OptionalActivities]
+      summary: Desactivar o borrar lógicamente según reglas de negocio (ADMIN, SUPER_ADMIN)
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: OK }
+
+  /reservations:
+    post:
+      tags: [Reservations]
+      summary: Crear reserva (AGENT, ADMIN, BUSINESS) — idempotente
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, maxLength: 128 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateReservationRequest' }
+      responses:
+        '201':
+          description: Reserva creada con snapshot
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ReservationCreated' }
+        '200':
+          description: Replay idempotente — mismo cuerpo que creación original
+        '409':
+          description: Sin disponibilidad / conflicto de concurrencia
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '403':
+          description: VIEWER u otros roles no permitidos (FR-021)

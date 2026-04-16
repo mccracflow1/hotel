@@ -49,10 +49,11 @@ try {
 app.use('/api/v1/auth',         require('./modules/auth/auth.routes'));
 app.use('/api/v1/availability', require('./modules/availability/availability.routes'));
 app.use('/api/v1/seasons',      require('./modules/seasons/seasons.routes'));
-// Se irán habilitando a medida que se implementen (Semana 3+)
-// app.use('/api/v1/rooms',        require('./modules/rooms/rooms.routes'));
-// app.use('/api/v1/plans',        require('./modules/plans/plans.routes'));
-// app.use('/api/v1/reservations', require('./modules/reservations/reservations.routes'));
+app.use('/api/v1/rooms', require('./modules/rooms/rooms.routes'));
+app.use('/api/v1/plans', require('./modules/plans/plans.routes'));
+app.use('/api/v1/optional-activities', require('./modules/plans/optional-activities.routes'));
+app.use('/api/v1/reservations', require('./modules/reservations/reservations.routes'));
+// Se irán habilitando a medida que se implementen
 // app.use('/api/v1/payments',     require('./modules/payments/payments.routes'));
 // app.use('/api/v1/inventory',    require('./modules/inventory/inventory.routes'));
 // app.use('/api/v1/media',        require('./modules/media/media.routes'));
