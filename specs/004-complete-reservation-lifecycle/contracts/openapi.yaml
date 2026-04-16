@@ -1,0 +1,519 @@
+openapi: 3.0.3
+info:
+  title: Sofia Hotel API — MVP Fase 1 extensión (004)
+  version: 0.2.0
+  description: >
+    Contratos REST para ciclo de reservas, inventario, usuarios, business_config y reportes.
+    Prefijo base `/api/v1`. Complementa `specs/003-rooms-planes-reservas/contracts/openapi.yaml`
+    (rooms, plans, creación de reservas). Autenticación Bearer JWT salvo donde se indique.
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local
+
+tags:
+  - name: Reservations
+  - name: Inventory
+  - name: Suppliers
+  - name: Users
+  - name: BusinessConfig
+  - name: Reports
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              enum: [VALIDATION_ERROR, NOT_FOUND, CONFLICT, FORBIDDEN]
+            message: { type: string }
+            details: { nullable: true }
+
+    PaginationMeta:
+      type: object
+      properties:
+        page: { type: integer }
+        limit: { type: integer }
+        total: { type: integer }
+        cursor: { type: string, nullable: true }
+
+    ReservationDetail:
+      type: object
+      description: Incluye snapshot inmutable y opcionales con precios congelados.
+      properties:
+        id: { type: string, format: uuid }
+        reservation_number: { type: string, example: HT-2026-00001 }
+        status:
+          type: string
+          enum: [PENDING, PAYMENT_PENDING, CONFIRMED, CANCELLED, COMPLETED]
+        customer_name: { type: string }
+        customer_document: { type: string }
+        customer_email: { type: string, nullable: true }
+        customer_phone: { type: string }
+        date_start: { type: string, format: date }
+        date_end: { type: string, format: date, nullable: true }
+        adults: { type: integer }
+        children: { type: integer }
+        total_amount: { type: number }
+        cancellation_reason: { type: string, nullable: true }
+        plan_id: { type: string, format: uuid, nullable: true }
+        room_id: { type: string, format: uuid, nullable: true }
+        activities_snapshot:
+          type: array
+          items:
+            type: object
+            properties:
+              activity_name: { type: string }
+              extra_cost: { type: number }
+              sort_order: { type: integer }
+        optional_activities:
+          type: array
+          items:
+            type: object
+            properties:
+              optional_activity_id: { type: string, format: uuid, nullable: true }
+              activity_name_snapshot: { type: string }
+              price_snapshot: { type: number }
+              quantity: { type: integer }
+
+    UpdateReservationDates:
+      type: object
+      required: [date_start]
+      properties:
+        date_start: { type: string, format: date }
+        date_end: { type: string, format: date, nullable: true }
+        version: { type: integer, description: Optimistic lock opcional }
+
+    PatchReservationStatus:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [PENDING, PAYMENT_PENDING, CONFIRMED, CANCELLED, COMPLETED]
+
+    CancelReservation:
+      type: object
+      required: [cancellation_reason]
+      properties:
+        cancellation_reason: { type: string, maxLength: 200 }
+
+    AddOptionalActivities:
+      type: object
+      required: [optional_activity_id, quantity]
+      properties:
+        optional_activity_id: { type: string, format: uuid }
+        quantity: { type: integer, minimum: 1 }
+
+    CancellationPolicyEstimate:
+      type: object
+      properties:
+        penalty_pct: { type: number, nullable: true }
+        penalty_amount: { type: number, nullable: true }
+        hours_before_checkin: { type: number }
+        rule_matched: { type: object, nullable: true }
+
+    InventoryItem:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        category: { type: string }
+        unit: { type: string }
+        current_stock: { type: number }
+        min_stock: { type: number }
+        supplier_id: { type: string, format: uuid, nullable: true }
+        is_active: { type: boolean }
+
+    InventoryMovement:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        item_id: { type: string, format: uuid }
+        type: { type: string, enum: [ENTRY, EXIT, ADJUSTMENT] }
+        quantity: { type: number }
+        notes: { type: string, nullable: true }
+        reservation_id: { type: string, format: uuid, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    Supplier:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        phone: { type: string, nullable: true }
+        email: { type: string, nullable: true }
+        is_active: { type: boolean }
+
+    BusinessConfigPublic:
+      type: object
+      description: Secretos MP enmascarados para roles no privilegiados.
+      properties:
+        hotel_name: { type: string }
+        nit: { type: string, nullable: true }
+        address: { type: string, nullable: true }
+        checkin_time: { type: string }
+        checkout_time: { type: string }
+        cancellation_policy: { type: array, items: { type: object } }
+        logo_url: { type: string, nullable: true }
+        primary_color: { type: string, nullable: true }
+        mp_public_key: { type: string, nullable: true, description: Puede mostrarse; clave pública }
+        mp_access_token_masked: { type: string, example: '***' }
+
+    ReportMeta:
+      type: object
+      properties:
+        from: { type: string, format: date }
+        to: { type: string, format: date }
+        revenue_basis:
+          type: string
+          example: reservation_totals
+          description: Hasta Fase 2 — no equivale a cobros MP confirmados
+        statuses_included:
+          type: array
+          items: { type: string }
+
+paths:
+  /reservations:
+    get:
+      tags: [Reservations]
+      summary: Listar reservas con filtros
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: date_from
+          schema: { type: string, format: date }
+        - in: query
+          name: date_to
+          schema: { type: string, format: date }
+        - in: query
+          name: room_id
+          schema: { type: string, format: uuid }
+        - in: query
+          name: plan_id
+          schema: { type: string, format: uuid }
+        - in: query
+          name: q
+          description: Búsqueda por nombre, documento o teléfono
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 20 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/ReservationDetail' } }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+
+  /reservations/by-number/{reservationNumber}:
+    get:
+      tags: [Reservations]
+      summary: Obtener reserva por número legible
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: reservationNumber
+          required: true
+          schema: { type: string, example: HT-2026-00001 }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ReservationDetail' }
+        '404': { description: Not found }
+
+  /reservations/{id}:
+    get:
+      tags: [Reservations]
+      summary: Detalle por id
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ReservationDetail' }
+    put:
+      tags: [Reservations]
+      summary: Modificar fechas de estadía
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: false
+          schema: { type: string }
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateReservationDates' }
+      responses:
+        '200': { description: OK }
+        '409': { description: Sin disponibilidad / conflicto }
+
+    delete:
+      tags: [Reservations]
+      summary: Cancelar reserva
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: false
+          schema: { type: string }
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CancelReservation' }
+      responses:
+        '200': { description: Cancelada }
+        '409': { description: Conflicto de estado }
+
+  /reservations/{id}/status:
+    patch:
+      tags: [Reservations]
+      summary: Transición manual de estado
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PatchReservationStatus' }
+      responses:
+        '200': { description: OK }
+        '403': { description: Rol no autorizado }
+
+  /reservations/{id}/policy:
+    get:
+      tags: [Reservations]
+      summary: Penalidad estimada de cancelación
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/CancellationPolicyEstimate' }
+
+  /reservations/{id}/optional-activities:
+    post:
+      tags: [Reservations]
+      summary: Agregar actividad opcional post-creación
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: false
+          schema: { type: string }
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AddOptionalActivities' }
+      responses:
+        '201': { description: Creado }
+
+  /inventory/items:
+    get:
+      tags: [Inventory]
+      summary: Listar ítems
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: OK }
+    post:
+      tags: [Inventory]
+      summary: Crear ítem
+      security: [{ bearerAuth: [] }]
+      responses:
+        '201': { description: Creado }
+
+  /inventory/items/{itemId}/movements:
+    get:
+      tags: [Inventory]
+      summary: Historial de movimientos del ítem
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: itemId
+          required: true
+          schema: { type: string, format: uuid }
+        - in: query
+          name: type
+          schema: { type: string, enum: [ENTRY, EXIT, ADJUSTMENT] }
+        - in: query
+          name: date_from
+          schema: { type: string, format: date }
+        - in: query
+          name: date_to
+          schema: { type: string, format: date }
+      responses:
+        '200': { description: OK }
+
+  /inventory/movements:
+    post:
+      tags: [Inventory]
+      summary: Registrar movimiento
+      security: [{ bearerAuth: [] }]
+      responses:
+        '201': { description: Creado }
+        '400': { description: Stock negativo }
+
+  /inventory/alerts:
+    get:
+      tags: [Inventory]
+      summary: Ítems activos bajo mínimo
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: OK }
+
+  /suppliers:
+    get:
+      tags: [Suppliers]
+      summary: Listar proveedores
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: OK }
+    post:
+      tags: [Suppliers]
+      summary: Crear proveedor
+      security: [{ bearerAuth: [] }]
+      responses:
+        '201': { description: Creado }
+
+  /business-config:
+    get:
+      tags: [BusinessConfig]
+      summary: Configuración del negocio
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/BusinessConfigPublic' }
+    put:
+      tags: [BusinessConfig]
+      summary: Actualizar configuración
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: OK }
+
+  /reports/occupancy:
+    get:
+      tags: [Reports]
+      summary: Ocupación por periodo
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: from
+          required: true
+          schema: { type: string, format: date }
+        - in: query
+          name: to
+          required: true
+          schema: { type: string, format: date }
+        - in: query
+          name: granularity
+          schema: { type: string, enum: [day, week, month] }
+      responses:
+        '200': { description: OK }
+
+  /reports/revenue:
+    get:
+      tags: [Reports]
+      summary: Ingresos (preliminar pre-MP completo)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: from
+          required: true
+          schema: { type: string, format: date }
+        - in: query
+          name: to
+          required: true
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Incluye meta.revenue_basis y statuses_included
+
+  /reports/reservations:
+    get:
+      tags: [Reports]
+      summary: Detalle exportable / analítica
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: OK }
+
+  /reports/inventory:
+    get:
+      tags: [Reports]
+      summary: Movimientos en ventana con saldos
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: from
+          required: true
+          schema: { type: string, format: date }
+        - in: query
+          name: to
+          required: true
+          schema: { type: string, format: date }
+      responses:
+        '200': { description: OK }
+
+security:
+  - bearerAuth: []

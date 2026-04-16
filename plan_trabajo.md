@@ -250,29 +250,62 @@
 ---
 
 ### SEMANA 4 — Reservas Completas + Inventario + Usuarios
-*MVP Fase 1 en curso*
+*MVP Fase 1 en curso · Alineación: `CONTEXTO_MAESTRO.md` §7 (modelo), §9 (API), §6 (RBAC), §21 Fase 1*
+
+**Objetivo de la semana (macro):** Cerrar el **ciclo de vida de reservas** (consulta, políticas, modificación/cancelación, opcionales post-creación), dejar operativo el **módulo de inventario y proveedores**, **usuarios del portal** y **configuración del negocio** según matriz de permisos, y exponer **reportes** consumibles por el portal con **Swagger** completo para lo implementado hasta aquí. Las habitaciones/planes/catálogo opcionales y `POST /reservations` con snapshot quedan como base de la Semana 3; esta semana profundiza en operación y gobierno del dato.
+
+**Restricciones y principios (no negociables):**
+- **Snapshots inmutables:** las filas de `reservation_activity_snapshot` no se reescriben; las actividades base no se “quitan” de una reserva existente.
+- **Precios congelados en opcionales:** `reservation_optional_activities` usa `price_snapshot` / nombre snapshot según contrato de API.
+- **Auditoría:** operaciones críticas registran `user_id` cuando aplica (portal); el rol `AGENT` actúa sin UI de portal.
+- **Idempotencia:** reutilizar middleware existente en operaciones críticas donde el contrato lo exija (p. ej. creación ya cubierta en S3; revisar replay en flujos que agreguen efectos económicos si se extienden).
 
 ---
 
 #### Día 16 · Lunes — `C2` Módulo de Reservas — Consulta y Ciclo de Estado
 
-- Implementar `GET /reservations`: lista con filtros (status, fecha, habitación/plan, cliente) y paginación
-- Implementar `GET /reservations/:id`: detalle completo con snapshot de actividades y estado de pago
-- Implementar `GET /reservations/:numero_reserva`: búsqueda por número legible (para agente IA)
-- Implementar `PATCH /reservations/:id/status`: confirmar manualmente (ADMIN)
-- Exponer `GET /reservations/:id/policy`: calcular penalidad de cancelación según horas de anticipación
+**Objetivo:** Exponer lectura y transiciones de estado de reservas con **RBAC** acorde a `ADMIN` / `BUSINESS` / `VIEWER` / `AGENT`, y cálculo de **política de cancelación** desde `business_config.cancellation_policy`.
+
+**Alcance funcional:**
+- Listado paginado con filtros: `status`, rango de fechas, `room_id` / `plan_id`, búsqueda por nombre/documento/teléfono.
+- Detalle por `id` incluyendo: datos de cliente, plan/habitación, **snapshot de actividades base**, opcionales congelados, totales, estado (`PENDING`, `PAYMENT_PENDING`, `CONFIRMED`, etc. según enum del modelo).
+- Resolución por **número legible** (`HT-YYYY-NNNNN`) para integración agente IA / operación telefónica.
+- Transición manual de estado donde el negocio lo permita (p. ej. confirmación manual por política interna), con validaciones de negocio.
+- **Política:** endpoint que devuelve penalidad estimada según anticipación a la fecha de check-in / ventana definida en JSON de políticas.
+
+**Endpoints de referencia (contrato):** `GET /reservations`, `GET /reservations/:id`, `GET /reservations/:number`, `PATCH /reservations/:id/status`, `GET /reservations/:id/policy`.
+
+**Criterios de aceptación:**
+- [ ] `VIEWER` puede listar y ver detalle; no puede mutar estados.
+- [ ] `BUSINESS` y `ADMIN` pueden operar según matriz; `AGENT` puede consultar reservas necesarias para soporte al flujo MCP (sin acceso al portal).
+- [ ] La respuesta de detalle siempre incluye snapshot y opcionales elegidos con montos congelados.
+- [ ] La política devuelve estructura clara (por ejemplo porcentaje o monto) usable por portal y futuro agente.
+
+**Notas técnicas:** Paginación consistente con el resto del API (`data` + `meta`); índices existentes sobre `reservations` para filtros frecuentes; errores con códigos (`NOT_FOUND`, `CONFLICT`, `VALIDATION_ERROR`).
 
 **5h · Semana 4**
 
 ---
 
-#### Día 17 · Martes — `C2` Módulo de Reservas — Modificación, Cancelación y Actividades Extra
+#### Día 17 · Martes — `C2` Módulo de Reservas — Modificación, Cancelación y Actividades Opcionales Adicionales
 
-- Implementar `PUT /reservations/:id`: modificar fechas con validación previa de disponibilidad en nuevas fechas
-- Implementar `DELETE /reservations/:id`: cancelar con motivo, aplicar política de penalidad, actualizar estado
-- Implementar `POST /reservations/:id/optional-activities`: agregar actividad opcional (solo si pertenece al plan)
-- Validar que no es posible eliminar actividades base de una reserva ya existente bajo ninguna circunstancia
-- Registrar cada cambio de estado en `audit_logs` con usuario responsable
+**Objetivo:** Permitir **cambio de fechas** con re-chequeo de disponibilidad, **cancelación** con motivo y aplicación de política, y **alta de opcionales** posteriores a la creación, sin violar reglas de snapshot ni catálogo del plan.
+
+**Alcance funcional:**
+- `PUT /reservations/:id`: nuevas fechas; transacción con verificación de solapes / cupos según diseño ya definido (`check_availability` / reglas de concurrencia).
+- `DELETE /reservations/:id`: cancelación; persistir `cancellation_reason`; actualizar `status`; reflejar impacto de política (registro contable o notas según diseño).
+- `POST /reservations/:id/optional-activities`: solo opcionales **asociados al plan** de la reserva; cantidades válidas; persistir snapshots de precio/nombre.
+- Imposibilidad **técnica y de dominio** de alterar actividades base vía API público.
+
+**Endpoints de referencia:** `PUT /reservations/:id`, `DELETE /reservations/:id`, `POST /reservations/:id/optional-activities`.
+
+**Criterios de aceptación:**
+- [ ] No se puede agregar un opcional que no esté vinculado al `plan_id` de la reserva.
+- [ ] Cambio de fechas falla con `409` cuando no hay disponibilidad, con mensaje alineado al formato estándar del API.
+- [ ] Cancelación registra motivo y usuario/actor en auditoría.
+- [ ] Los ítems de snapshot base permanecen inmutables tras cualquier operación.
+
+**Notas técnicas:** Reutilizar transacciones Knex; en cancelación, considerar interacción futura con pagos (Semana 5): dejar hooks o estados coherentes (`PAYMENT_PENDING` vs `CONFIRMED`).
 
 **5h · Semana 4**
 
@@ -280,35 +313,71 @@
 
 #### Día 18 · Miércoles — `C2` Módulo de Inventario Completo
 
-- Implementar CRUD `/inventory/items`: nombre, categoría, unidad, `stock_actual`, `stock_mínimo`, proveedor
-- Implementar `POST /inventory/movements`: entrada/salida con actualización automática de `stock_actual`
-- Implementar `GET /inventory/alerts`: items donde `stock_actual < stock_mínimo`
-- Implementar `GET /inventory/items/:id/history`: historial de movimientos con filtros de tipo y fecha
-- Implementar CRUD completo de `/suppliers` con asociación a `inventory_items`
+**Objetivo:** Operativizar **inventario de insumos** alineado a tablas `inventory_items`, `inventory_movements`, `suppliers` y reglas de categoría/unidad del modelo maestro.
+
+**Alcance funcional:**
+- CRUD de ítems: categoría (`inv_category`), unidad, stock actual vs mínimo, proveedor opcional, `is_active`.
+- Movimientos: `ENTRY`, `EXIT`, `ADJUSTMENT`; actualización atómica de `current_stock`; vínculo opcional a `reservation_id` para trazabilidad de consumo.
+- Alertas de stock bajo: lista de ítems con `current_stock < min_stock`.
+- Historial por ítem con filtros por tipo de movimiento y rango de fechas.
+- CRUD de proveedores y asociación a ítems.
+
+**Endpoints de referencia:** `GET/POST/PUT` bajo `/inventory/items`, `POST /inventory/movements`, `GET /inventory/alerts`, historial bajo convención acordada (`/inventory/items/:id/movements` o equivalente documentado), `GET/POST/PUT` `/suppliers`.
+
+**Criterios de aceptación:**
+- [ ] Movimiento nunca deja stock negativo (rechazo con error de validación o transacción).
+- [ ] `BUSINESS` puede registrar movimientos; `VIEWER` solo lectura; creación de ítems/proveedores acorde a matriz (típicamente `ADMIN`).
+- [ ] Alertas devuelven solo ítems activos por debajo del mínimo.
+
+**Notas técnicas:** Índice de stock bajo alineado al modelo; considerar paginación en historial.
 
 **5h · Semana 4**
 
 ---
 
-#### Día 19 · Jueves — `C2` Módulo de Usuarios y Configuración del Negocio
+#### Día 19 · Jueves — `C2` Módulo de Usuarios, Configuración del Negocio y Temporadas (cierre admin)
 
-- Implementar CRUD `/users`: crear, listar, actualizar, activar/desactivar (solo ADMIN)
-- Implementar `POST /users/:id/reset-password`: generar token temporal y enviar correo
-- Implementar `PATCH /users/me/profile`: actualizar nombre, foto y contraseña propia
-- Implementar `GET/PUT /business-config`: configuración general, políticas de cancelación, horarios
-- Implementar `GET/POST /seasons`: gestión de temporadas de precios desde el admin
+**Objetivo:** Habilitar **gestión de usuarios del portal** con separación `SUPER_ADMIN` / `ADMIN`, **perfil propio**, **business_config** (horarios, políticas, branding) y **temporadas** si el cierre del módulo de disponibilidad (Semana 2) requiere endpoints admin adicionales o hardening.
+
+**Alcance funcional:**
+- Usuarios: listado, alta, edición, activación/desactivación; restricción explícita: `ADMIN` no gestiona `SUPER_ADMIN` (según matriz §6).
+- Reset de contraseña vía flujo seguro (token por correo) si aún no está cerrado end-to-end.
+- Perfil: `PATCH` en ruta de “me” para nombre, avatar, cambio de contraseña.
+- `business_config`: lectura/actualización de datos del hotel, `checkin_time` / `checkout_time`, `cancellation_policy` como JSON validado, campos de branding; **no** exponer secretos de MercadoPago en GET sin masking (solo `SUPER_ADMIN` donde aplique).
+- Temporadas: `GET/POST/PUT/DELETE /seasons` o equivalente ya definido — **completar** validaciones de solapes de fechas y uso del multiplicador en cálculos de referencia (documentar supuesto si el precio final se unifica en Semana 5 con pagos).
+
+**Endpoints de referencia:** `GET/POST/PUT/PATCH` `/users`, `GET/PUT /business-config`, `/seasons` (según contrato OpenAPI del repo).
+
+**Criterios de aceptación:**
+- [ ] Matriz de permisos respetada en cada ruta (403 cuando el rol no alcanza).
+- [ ] Políticas de cancelación en `business_config` son válidas ante el validador (esquema Joi/JSON Schema).
+- [ ] Credenciales sensibles de pasarela solo manipulables por `SUPER_ADMIN` donde el negocio lo definió.
+
+**Notas técnicas:** Coherencia con `GET /reservations/:id/policy` (misma fuente de verdad para penalidades).
 
 **5h · Semana 4**
 
 ---
 
-#### Día 20 · Viernes — `C2` Módulo de Reportes + Swagger Completo
+#### Día 20 · Viernes — `C2` Reportes Operativos + Swagger Consolidado
 
-- Implementar `GET /reports/occupancy`: tasa de ocupación por periodo con `GROUP BY date_trunc`
-- Implementar `GET /reports/revenue`: ingresos por método de pago y tipo de servicio
-- Implementar `GET /reports/reservations`: detalle filtrable, formato exportable
-- Implementar `GET /reports/inventory`: movimientos con saldo apertura/cierre por ítem y periodo
-- Completar documentación Swagger de todos los endpoints implementados con ejemplos reales
+**Objetivo:** Entregar **lecturas analíticas** para dashboard y exportación básica, sin duplicar lógica de negocio; dejar **documentación Swagger** actualizada para **todos** los endpoints existentes en el alcance Semanas 1–4.
+
+**Alcance funcional:**
+- Ocupación por periodo (agregación temporal sobre reservas confirmadas / definición explícita de qué estados cuentan).
+- Ingresos: por método de pago / tipo de servicio — si aún no hay filas en `payments` (hasta Semana 5), documentar **modo “preview”** o basarse en `total_amount` de reservas con estado acordado; evitar cifras engañosas.
+- Detalle de reservas exportable (CSV/JSON paginado) para analítica.
+- Inventario: movimientos en ventana con saldo inicial/final por ítem.
+- Swagger: tags por dominio, esquemas reutilizables, ejemplos `request/response`, códigos de error estándar.
+
+**Endpoints de referencia:** `GET /reports/occupancy`, `GET /reports/revenue`, `GET /reports/reservations`, `GET /reports/inventory`; documentación en `/api/docs`.
+
+**Criterios de aceptación:**
+- [ ] Cada reporte define un contrato de query params (`from`, `to`, granularidad) y límites de performance (paginación o agregación por SQL).
+- [ ] Los números son reproducibles (misma consulta → mismo resultado).
+- [ ] Swagger refleja el estado real del código; no lista endpoints “fantasma”.
+
+**Notas técnicas:** Para ingresos post-MVP Fase 2, marcar en comentarios de implementación o descripción OpenAPI la dependencia de `payments` confirmados.
 
 **5h · Semana 4**
 
@@ -316,14 +385,14 @@
 
 > ### 🚀 MVP FASE 1 — Núcleo del Negocio Completo
 >
-> Al finalizar la Semana 4, es posible gestionar habitaciones, crear planes con actividades base inmutables, agregar actividades opcionales al catálogo, crear reservas con snapshot completo y gestionar inventario.
+> Al finalizar la **Semana 4**, el backend permite **operar reservas de punta a punta** (lectura, política, cambios y cancelación, opcionales adicionales), gestionar **inventario y proveedores**, administrar **usuarios y configuración del negocio** según roles, y consumir **reportes** base. Esto satisface el criterio de **MVP Fase 1** del contexto maestro: *“crear, consultar, modificar y cancelar una reserva con plan y actividades opcionales”* más *inventario operativo*; los **pagos en línea** se completan en **Semana 5 (Fase 2)**.
 >
-> **Entregables verificables:**
-> - ✅ CRUD completo de habitaciones y servicios con gestión de medios
-> - ✅ CRUD de planes con actividades base (inmutables en reservas) y catálogo de opcionales
-> - ✅ Sistema de reservas: crear, consultar, modificar fechas, cancelar con política, agregar opcionales
-> - ✅ Inventario: ítems, movimientos, alertas de stock bajo, proveedores
-> - ✅ Módulo de usuarios y configuración del negocio (políticas, temporadas, datos generales)
+> **Entregables verificables (Semana 4):**
+> - ✅ Ciclo de reservas: listado/detalle/búsqueda por número, política de cancelación, cambio de fechas, cancelación con motivo, agregar opcionales post-creación, auditoría en mutaciones relevantes.
+> - ✅ Inventario: ítems, movimientos, alertas de stock bajo, proveedores, historial por ítem.
+> - ✅ Usuarios del portal y `business_config` con RBAC; temporadas alineadas al módulo de precios/dispo.
+> - ✅ Reportes: ocupación, ingresos (con supuestos documentados hasta activar pagos), reservas detalladas, inventario.
+> - ✅ Swagger/OpenAPI actualizado para el alcance implementado.
 
 ---
 
