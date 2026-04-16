@@ -1,0 +1,76 @@
+/**
+ * Migration 006: payment_attempts, payments, idempotency_keys
+ */
+exports.up = async function (knex) {
+  // payment_attempts: cada intento de pago (puede haber varios por reserva)
+  await knex.schema.createTable('payment_attempts', (table) => {
+    table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
+    table
+      .uuid('reservation_id')
+      .notNullable()
+      .references('id')
+      .inTable('reservations')
+      .onDelete('RESTRICT');
+    // SHA256(reservation_id + amount + 'COP') — garantiza un solo intento por operación
+    table.string('idempotency_key', 128).notNullable().unique();
+    table.string('preference_id', 100).nullable();
+    table.text('checkout_url').nullable();
+    table.string('status', 30).notNullable().defaultTo('pending');
+    table.timestamptz('expires_at').nullable();
+    table.timestamptz('created_at').notNullable().defaultTo(knex.fn.now());
+  });
+
+  // payments: pagos CONFIRMADOS (un registro definitivo por reserva confirmada)
+  await knex.schema.createTable('payments', (table) => {
+    table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
+    table
+      .uuid('reservation_id')
+      .notNullable()
+      .references('id')
+      .inTable('reservations')
+      .onDelete('RESTRICT');
+    table.decimal('amount', 12, 2).notNullable();
+    table.specificType('currency', 'char(3)').notNullable().defaultTo('COP');
+    table.string('payment_method', 50).nullable(); // 'mercadopago_checkout', 'pse', 'manual'
+    table.string('external_id', 100).nullable();   // ID del pago en MercadoPago
+    table.string('status', 30).notNullable();       // 'confirmed', 'refunded', 'partial_refund'
+    table.timestamptz('confirmed_at').nullable();
+    table.timestamptz('created_at').notNullable().defaultTo(knex.fn.now());
+  });
+
+  // idempotency_keys: prevención de operaciones duplicadas en reservas y pagos
+  await knex.schema.createTable('idempotency_keys', (table) => {
+    table.string('key', 128).primary();
+    table.string('operation', 60).notNullable();
+    table.smallint('response_status').nullable();
+    table.jsonb('response_body').nullable();
+    table.timestamptz('created_at').notNullable().defaultTo(knex.fn.now());
+    // TTL 24 horas; pg_cron limpia cada hora las expiradas
+    table
+      .timestamptz('expires_at')
+      .notNullable()
+      .defaultTo(knex.raw("NOW() + INTERVAL '24 hours'"));
+  });
+
+  // Índice parcial para búsqueda rápida de claves vigentes + cleanup automático
+  await knex.raw(`
+    CREATE INDEX idx_idempotency_expires
+      ON idempotency_keys (expires_at)
+      WHERE expires_at > NOW()
+  `);
+
+  await knex.schema.table('payment_attempts', (table) => {
+    table.index('reservation_id');
+  });
+
+  await knex.schema.table('payments', (table) => {
+    table.index('reservation_id');
+    table.index('external_id');
+  });
+};
+
+exports.down = async function (knex) {
+  await knex.schema.dropTableIfExists('idempotency_keys');
+  await knex.schema.dropTableIfExists('payments');
+  await knex.schema.dropTableIfExists('payment_attempts');
+};
