@@ -6,6 +6,10 @@ const { AppError } = require('./error-handler');
 
 const OPS = {
   RESERVATION_CREATE: 'reservation:create',
+  RESERVATION_UPDATE: 'reservation:update',
+  RESERVATION_CANCEL: 'reservation:cancel',
+  RESERVATION_OPTIONAL_ADD: 'reservation:optional-add',
+  INVENTORY_MOVEMENT_CREATE: 'inventory:movement',
 };
 
 /**
@@ -25,6 +29,21 @@ async function idempotencyReservationCreate(req, res, next) {
     operation: OPS.RESERVATION_CREATE,
   });
 }
+
+function idempotencyStrict(operation) {
+  return function idempotencyStrictMw(req, res, next) {
+    return runIdempotency(req, res, next, {
+      requireKey: true,
+      failClosed: true,
+      operation,
+    });
+  };
+}
+
+const idempotencyReservationUpdate = idempotencyStrict(OPS.RESERVATION_UPDATE);
+const idempotencyReservationCancel = idempotencyStrict(OPS.RESERVATION_CANCEL);
+const idempotencyReservationOptionalAdd = idempotencyStrict(OPS.RESERVATION_OPTIONAL_ADD);
+const idempotencyInventoryMovement = idempotencyStrict(OPS.INVENTORY_MOVEMENT_CREATE);
 
 async function runIdempotency(req, res, next, options) {
   const { requireKey, failClosed, operation } = options;
@@ -106,4 +125,13 @@ async function runIdempotency(req, res, next, options) {
   }
 }
 
-module.exports = { idempotency, idempotencyReservationCreate, OPS };
+module.exports = {
+  idempotency,
+  idempotencyReservationCreate,
+  idempotencyReservationUpdate,
+  idempotencyReservationCancel,
+  idempotencyReservationOptionalAdd,
+  idempotencyInventoryMovement,
+  idempotencyStrict,
+  OPS,
+};
