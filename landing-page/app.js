@@ -112,12 +112,18 @@
       return;
     }
     const cards = list
-      .map(
-        (p) => `<div class="rounded border border-slate-700 p-4">
+      .map((p) => {
+        const inner = `<div class="rounded border border-slate-700 p-4 h-full">
         <div class="font-semibold">${escapeHtml(p.name)}</div>
         <div class="text-slate-400 text-sm">${escapeHtml(String(p.short_desc || '').slice(0, 140))}</div>
-      </div>`,
-      )
+      </div>`;
+        if (p.slug) {
+          return `<a class="block rounded border border-transparent hover:border-amber-500/40 focus:outline-none focus:ring-2 focus:ring-amber-500/50" href="./plan.html?slug=${encodeURIComponent(
+            p.slug,
+          )}" aria-label="Ver plan ${escapeHtml(p.name)}">${inner}</a>`;
+        }
+        return inner;
+      })
       .join('');
     setHtml(
       '#plans',
@@ -238,8 +244,14 @@
     });
   }
 
+  function initPrivacyFooter() {
+    const a = document.querySelector('#privacy-footer-link');
+    if (a && window.PRIVACY_POLICY_URL) a.href = window.PRIVACY_POLICY_URL;
+  }
+
   async function main() {
     try {
+      initPrivacyFooter();
       const bundle = await fetchJson('/site-content/public');
       const site = bundle.data?.site_content || [];
       heroFromBundle(site);
