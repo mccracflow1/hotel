@@ -7,6 +7,7 @@ const db = require('../../config/database');
 const repo = require('./media.repository');
 const { createStorage } = require('./storage');
 const { ConflictError, NotFoundError } = require('../../middlewares/error-handler');
+const { setAuditUserOnTrx } = require('../../utils/audit-context');
 
 async function uploadImage({ buffer, mimetype, originalname, userId }) {
   const id = randomUUID();
@@ -25,6 +26,7 @@ async function uploadImage({ buffer, mimetype, originalname, userId }) {
   });
 
   return db.transaction(async (trx) => {
+    await setAuditUserOnTrx(trx, userId);
     const row = await repo.insertMedia(trx, {
       id,
       filename: originalname || `upload${ext}`,
@@ -39,6 +41,42 @@ async function uploadImage({ buffer, mimetype, originalname, userId }) {
   });
 }
 
+async function uploadVideo({ buffer, mimetype, originalname, userId }) {
+  const id = randomUUID();
+  const ext =
+    path.extname(originalname || '') || (mimetype === 'video/quicktime' ? '.mov' : '.mp4');
+  const storage = createStorage();
+  const { originalUrl, thumbnailUrl } = await storage.saveOriginalAndThumb({
+    id,
+    originalExt: ext,
+    originalBuffer: buffer,
+    thumbBuffer: null,
+    contentType: mimetype,
+  });
+
+  return db.transaction(async (trx) => {
+    await setAuditUserOnTrx(trx, userId);
+    const row = await repo.insertMedia(trx, {
+      id,
+      filename: originalname || `upload${ext}`,
+      original_url: originalUrl,
+      thumbnail_url: thumbnailUrl,
+      file_type: 'video',
+      mime_type: mimetype,
+      size_bytes: buffer.length,
+      uploaded_by: userId || null,
+    });
+    return row;
+  });
+}
+
+async function uploadMedia(opts) {
+  if (opts.mimetype.startsWith('video/')) {
+    return uploadVideo(opts);
+  }
+  return uploadImage(opts);
+}
+
 async function listLibrary(query) {
   const page = Math.max(1, parseInt(query.page, 10) || 1);
   const limit = Math.min(100, Math.max(1, parseInt(query.limit, 10) || 50));
@@ -50,14 +88,30 @@ async function listLibrary(query) {
   });
 }
 
-async function removeMedia(id) {
+async function getUsage(id) {
+  const row = await repo.findById(id);
+  if (!row) throw new NotFoundError('Media not found');
+  return repo.listUsageDetails(db, id);
+}
+
+async function patchFilename(id, filename, userId) {
+  const row = await repo.findById(id);
+  if (!row) throw new NotFoundError('Media not found');
+  return db.transaction(async (trx) => {
+    await setAuditUserOnTrx(trx, userId);
+    return repo.patchFilename(trx, id, filename);
+  });
+}
+
+async function removeMedia(id, userId) {
   const row = await repo.findById(id);
   if (!row) throw new NotFoundError('Media not found');
 
   return db.transaction(async (trx) => {
-    const refs = await repo.countRefs(trx, id);
-    if (refs > 0) {
-      throw new ConflictError('Media is in use (room, plan, optional activity, or site content)');
+    await setAuditUserOnTrx(trx, userId);
+    const usage = await repo.listUsageDetails(trx, id);
+    if (usage.total > 0) {
+      throw new ConflictError('Media is in use', usage);
     }
     await repo.deleteById(trx, id);
     const storage = createStorage();
@@ -66,4 +120,4 @@ async function removeMedia(id) {
   });
 }
 
-module.exports = { uploadImage, listLibrary, removeMedia };
+module.exports = { uploadImage, uploadMedia, uploadVideo, listLibrary, removeMedia, getUsage, patchFilename };
