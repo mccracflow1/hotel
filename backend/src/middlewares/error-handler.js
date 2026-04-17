@@ -1,3 +1,5 @@
+const logger = require('../utils/logger');
+
 class AppError extends Error {
   constructor(code, message, statusCode, details = null) {
     super(message);
@@ -60,7 +62,18 @@ function errorHandler(err, req, res, next) {
     });
   }
 
-  // Unexpected errors
+  // Unexpected errors: log stack + PG diagnostics so 500s sean diagnosticables.
+  logger.logText('error', 'Unhandled error', {
+    method: req.method,
+    url: req.originalUrl,
+    message: err.message,
+    pgCode: err.code,
+    pgDetail: err.detail,
+    pgHint: err.hint,
+    pgPosition: err.position,
+    stack: err.stack,
+  });
+
   return res.status(500).json({
     error: {
       code: 'INTERNAL_ERROR',
