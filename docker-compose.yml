@@ -1,0 +1,137 @@
+version: '3.9'
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Plataforma Hotelera IA — Docker Compose
+#
+#  Servicios:
+#    postgres      → Base de datos PostgreSQL 16
+#    backend       → API Node.js/Express (puerto 3000)
+#    admin-portal  → Portal Angular servido por nginx (puerto 4200)
+#    landing-page  → Landing page estática con nginx (puerto 8080)
+#
+#  Primer arranque:
+#    1. cp .env.example .env   (y rellenar los secretos)
+#    2. docker compose up --build
+#
+#  Las migraciones Knex se ejecutan automáticamente al arrancar el backend.
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: hotel_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       ${POSTGRES_DB:-hotel_db}
+      POSTGRES_USER:     ${POSTGRES_USER:-hotel_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hotel_pass}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hotel_user} -d ${POSTGRES_DB:-hotel_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ── Backend API ─────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: hotel_backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3000
+
+      # Base de datos — se construye desde las variables individuales de postgres
+      DATABASE_URL: >-
+        postgresql://${POSTGRES_USER:-hotel_user}:${POSTGRES_PASSWORD:-hotel_pass}@postgres:5432/${POSTGRES_DB:-hotel_db}
+
+      # JWT — OBLIGATORIO: mínimo 64 caracteres cada uno (NFR-004)
+      JWT_SECRET:         ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_EXPIRES_IN:     ${JWT_EXPIRES_IN:-15m}
+
+      # Almacenamiento de medios (local por defecto; cambiar a 's3' para producción)
+      STORAGE_PROVIDER:      ${STORAGE_PROVIDER:-local}
+      LOCAL_STORAGE_DIR:     /app/storage/public
+      PUBLIC_MEDIA_BASE_URL: ${PUBLIC_MEDIA_BASE_URL:-http://localhost:3000/uploads}
+      UPLOAD_MAX_BYTES:      ${UPLOAD_MAX_BYTES:-10485760}
+      UPLOAD_MAX_VIDEO_BYTES: ${UPLOAD_MAX_VIDEO_BYTES:-209715200}
+
+      # URLs públicas
+      API_URL:     ${API_URL:-http://localhost:3000}
+      LANDING_URL: ${LANDING_URL:-http://localhost:8080}
+
+      # MercadoPago (opcional en desarrollo)
+      MP_ACCESS_TOKEN:  ${MP_ACCESS_TOKEN:-}
+      MP_WEBHOOK_SECRET: ${MP_WEBHOOK_SECRET:-}
+
+      # SMTP (opcional en desarrollo)
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-noreply@hotel.local}
+
+      # AWS S3 (solo si STORAGE_PROVIDER=s3)
+      AWS_REGION:            ${AWS_REGION:-}
+      AWS_BUCKET_NAME:       ${AWS_BUCKET_NAME:-}
+      AWS_ACCESS_KEY_ID:     ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_PUBLIC_BASE_URL:   ${AWS_PUBLIC_BASE_URL:-}
+
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+
+    volumes:
+      # Persistir medios subidos (solo cuando STORAGE_PROVIDER=local)
+      - media_storage:/app/storage/public
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/v1/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 25s
+
+  # ── Portal de Administración Angular ────────────────────────────────────────
+  admin-portal:
+    build:
+      context: ./admin-portal
+      dockerfile: Dockerfile
+    container_name: hotel_admin
+    restart: unless-stopped
+    ports:
+      - "${ADMIN_PORT:-4200}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # ── Landing Page ─────────────────────────────────────────────────────────────
+  landing-page:
+    build:
+      context: ./landing-page
+      dockerfile: Dockerfile
+    container_name: hotel_landing
+    restart: unless-stopped
+    ports:
+      - "${LANDING_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+    driver: local
+  media_storage:
+    driver: local
