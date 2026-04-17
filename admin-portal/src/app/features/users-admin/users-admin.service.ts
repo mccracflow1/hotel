@@ -20,18 +20,18 @@ export class UsersAdminService {
   private readonly apiUrl = inject(API_URL);
 
   list(): Observable<{ data: PortalUserRow[] }> {
-    return this.http.get(`${this.apiUrl}/users`);
+    return this.http.get<{ data: PortalUserRow[] }>(`${this.apiUrl}/users`);
   }
 
   create(body: { name: string; email: string; password: string; role: string }): Observable<{ data: PortalUserRow }> {
-    return this.http.post(`${this.apiUrl}/users`, body);
+    return this.http.post<{ data: PortalUserRow }>(`${this.apiUrl}/users`, body);
   }
 
   update(
     id: string,
     body: { name?: string; email?: string; password?: string; role?: string; is_active?: boolean },
   ): Observable<{ data: PortalUserRow }> {
-    return this.http.put(`${this.apiUrl}/users/${id}`, body);
+    return this.http.put<{ data: PortalUserRow }>(`${this.apiUrl}/users/${id}`, body);
   }
 
   patchStatus(id: string, is_active: boolean): Observable<{ data: PortalUserRow }> {

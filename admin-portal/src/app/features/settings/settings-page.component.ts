@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, inject, signal } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -142,6 +142,7 @@ export class SettingsPageComponent {
   private readonly settings = inject(SettingsService);
   private readonly snack = inject(MatSnackBar);
   private readonly auth = inject(AuthService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   readonly saving = signal(false);
   readonly isSuper = computed(() => this.auth.user()?.role === 'SUPER_ADMIN');
@@ -191,6 +192,8 @@ export class SettingsPageComponent {
             }),
           );
         }
+        // OnPush no reacciona a mutaciones in-place de FormArray.
+        this.cdr.markForCheck();
       },
       error: (e) => this.snack.open(messageFromApiError(e), 'Cerrar', { duration: 5000 }),
     });
@@ -203,11 +206,16 @@ export class SettingsPageComponent {
         penalty_pct: [50, [Validators.required, Validators.min(0), Validators.max(100)]],
       }),
     );
+    this.cdr.markForCheck();
   }
 
   removeRule(i: number): void {
     this.policyRows.removeAt(i);
-    if (!this.policyRows.length) this.addRule();
+    if (!this.policyRows.length) {
+      this.addRule();
+      return;
+    }
+    this.cdr.markForCheck();
   }
 
   save(): void {

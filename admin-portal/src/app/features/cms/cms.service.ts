@@ -31,7 +31,7 @@ export class CmsService {
   }
 
   getSection(section: string): Observable<{ data: SiteContentEntry[] }> {
-    return this.http.get(`${this.apiUrl}/site-content/${section}`);
+    return this.http.get<{ data: SiteContentEntry[] }>(`${this.apiUrl}/site-content/${section}`);
   }
 
   putSection(section: string, entries: SiteContentEntry[]): Observable<{ data: SiteContentEntry[] }> {
@@ -40,15 +40,15 @@ export class CmsService {
   }
 
   listFaqsManage(): Observable<{ data: FaqRow[] }> {
-    return this.http.get(`${this.apiUrl}/faqs/manage`);
+    return this.http.get<{ data: FaqRow[] }>(`${this.apiUrl}/faqs/manage`);
   }
 
   createFaq(body: Partial<FaqRow>): Observable<{ data: FaqRow }> {
-    return this.http.post(`${this.apiUrl}/faqs`, body);
+    return this.http.post<{ data: FaqRow }>(`${this.apiUrl}/faqs`, body);
   }
 
   patchFaq(id: string, body: Partial<FaqRow>): Observable<{ data: FaqRow }> {
-    return this.http.put(`${this.apiUrl}/faqs/${id}`, body);
+    return this.http.put<{ data: FaqRow }>(`${this.apiUrl}/faqs/${id}`, body);
   }
 
   deleteFaq(id: string): Observable<void> {

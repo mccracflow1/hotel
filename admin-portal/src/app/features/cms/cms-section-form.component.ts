@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -76,6 +76,7 @@ export class CmsSectionFormComponent {
   private readonly cms = inject(CmsService);
   private readonly fb = inject(FormBuilder);
   private readonly snack = inject(MatSnackBar);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   readonly title = signal('Sección');
   readonly saving = signal(false);
@@ -109,15 +110,18 @@ export class CmsSectionFormComponent {
         }),
       );
     }
+    // OnPush no detecta cambios al mutar FormArray in-place (clear/push);
+    // forzar CD después de reconstruir la lista.
+    this.cdr.markForCheck();
   }
 
   save(): void {
     if (this.form.invalid) return;
     this.saving.set(true);
     const payload: SiteContentEntry[] = this.entries.getRawValue().map((e) => ({
-      key: e.key,
-      value: e.value,
-      type: e.type,
+      key: e['key'] as string,
+      value: e['value'] as string | null,
+      type: e['type'] as string,
     }));
     this.cms.putSection(this.section, payload).subscribe({
       next: (res) => {

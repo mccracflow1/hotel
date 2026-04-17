@@ -30,7 +30,7 @@ export class SettingsService {
   private readonly idempotency = inject(IdempotencyService);
 
   get(): Observable<{ data: Record<string, unknown> | null }> {
-    return this.http.get(`${this.apiUrl}/business-config`);
+    return this.http.get<{ data: Record<string, unknown> | null }>(`${this.apiUrl}/business-config`);
   }
 
   put(body: BusinessConfigPayload): Observable<unknown> {

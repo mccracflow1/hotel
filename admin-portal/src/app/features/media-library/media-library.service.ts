@@ -52,7 +52,7 @@ export class MediaLibraryService {
   }
 
   getUsage(id: string): Observable<{ data: unknown }> {
-    return this.http.get(`${this.apiUrl}/media/${id}/usage`);
+    return this.http.get<{ data: unknown }>(`${this.apiUrl}/media/${id}/usage`);
   }
 
   patchRename(id: string, filename: string): Observable<{ data: MediaRow }> {

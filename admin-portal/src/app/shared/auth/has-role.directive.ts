@@ -14,7 +14,7 @@ export class HasRoleDirective {
   private readonly vcr = inject(ViewContainerRef);
   private readonly auth = inject(AuthService);
 
-  readonly appHasRole = input.required<UserRole[]>();
+  readonly appHasRole = input.required<readonly UserRole[]>();
 
   constructor() {
     effect(() => {
