@@ -2,6 +2,7 @@
 
 <!-- 
   Sync Impact Report
+  - Version change: 1.1.0 -> 1.2.0 (2026-04-17): IV extended — Public Web Acquisition Channel (anonymous landing writes) with compensating controls; clarifies JWT scope vs public booking API
   - Version change: 1.0.0 -> 1.1.0 (2026-04-16): Principles II, III, IV clarified — idempotency scope, snapshots at reservation creation, audit user_id contract
   - Version change (historical): Initial -> 1.0.0
   - Added principles: 
@@ -33,8 +34,21 @@ When a **reservation is created**, all plan base activities and optional activit
 ### IV. Strict Security & Role-Based Access Control (RBAC)
 Authentication is mandatory via JWT (short-lived access tokens + httpOnly refresh tokens). Access is restricted by a strict RBAC matrix: `SUPER_ADMIN`, `ADMIN`, `BUSINESS`, `VIEWER`, and `AGENT`. Every critical state change (INSERT, UPDATE, DELETE) MUST generate an audit log entry for accountability, including the **acting user** when the change is performed through the API (persisted in `audit_logs.user_id` via the application–database contract, e.g. transaction-local `set_config` consumed by `log_changes()`).
 
+**Public Web Acquisition Channel (Landing — explicit exception to JWT-on-client):**  
+End-user browsers on the **public marketing site** are not JWT holders. The product MAY expose a **narrow, namespaced HTTP surface** (e.g. under `/api/v1/public/...`) for **anonymous** `POST` operations that create a **reservation** or **initiate checkout**, provided **all** of the following hold:
+
+1. **No secrets in static assets** — no AGENT or ADMIN tokens shipped to the browser.  
+2. **Idempotency** — `Idempotency-Key` is **mandatory** on every anonymous mutating request (Principle II).  
+3. **Abuse controls** — dedicated **rate limiting** (and future CAPTCHA/bot mitigation as needed) on those routes.  
+4. **Same domain logic** — handlers delegate to the **same** reservation/payment services used by authenticated flows (snapshots, transactions, pessimistic availability).  
+5. **Auditability** — mutations record a **non-forged** audit context (e.g. channel `WEB_PUBLIC` via `set_config` / application contract) where `user_id` is null; this does **not** replace JWT for portal or AGENT traffic.
+
+JWT + RBAC remains mandatory for **Admin Portal**, **AGENT-authenticated** integrations, and any operation outside this documented public surface.
+
 ### V. MCP-Driven IA Autonomy
 The AI Agent (Sofia) must remain stateless regarding business logic and data. It interacts with the system exclusively through a Model Context Protocol (MCP) server that exposes validated tools. The agent must never have direct write access to the database or bypass API security and validation layers.
+
+**Scope note:** The **web chat widget** on the Landing Page MAY call an **external HTTPS webhook** (e.g. n8n) directly for conversational UX; that channel is **not** the MCP tool surface. MCP still applies to the **Sofia agent** tool execution path (WhatsApp / agent canvas) as defined in project specs. Business mutations initiated from chat that affect reservations or payments MUST ultimately go through the **same Node.js API** validation and idempotency rules (Principles I–III).
 
 ### VI. Standalone & Signal-Driven UI
 The Admin Portal (Angular 17+) MUST use standalone components and Signals for state management. `ChangeDetectionStrategy.OnPush` is mandatory to ensure optimal performance. Business logic in the frontend is limited to UI state; all domain rules must be validated by the API.
@@ -57,4 +71,4 @@ The Admin Portal (Angular 17+) MUST use standalone components and Signals for st
 ## Governance
 This Constitution is the supreme architectural authority for the Sofia project. Every Pull Request must be audited against these principles. Architectural complexity must be justified; YAGNI (You Ain't Gonna Need It) is the default stance for all technical decisions.
 
-**Version**: 1.1.0 | **Ratified**: 2026-04-16 | **Last Amended**: 2026-04-16
+**Version**: 1.2.0 | **Ratified**: 2026-04-16 | **Last Amended**: 2026-04-17
