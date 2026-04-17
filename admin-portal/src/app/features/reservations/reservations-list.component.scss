@@ -1,0 +1,92 @@
+.hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.filter {
+  min-width: 140px;
+}
+
+.filter.grow {
+  flex: 1 1 220px;
+  min-width: 200px;
+}
+
+.export-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.table {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.click-row {
+  cursor: pointer;
+}
+
+.click-row:hover {
+  background: color-mix(in srgb, var(--mat-sys-primary) 6%, transparent);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.tag {
+  font-size: 0.75rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+
+.tag.plan {
+  background: color-mix(in srgb, var(--mat-sys-tertiary) 18%, transparent);
+}
+
+.tag.room {
+  background: color-mix(in srgb, var(--mat-sys-secondary) 18%, transparent);
+}
+
+.status-pill {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  font-weight: 500;
+}
+
+.st-pending,
+.st-payment_pending {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.st-confirmed {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.st-cancelled {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.st-completed {
+  background: #e3f2fd;
+  color: #1565c0;
+}

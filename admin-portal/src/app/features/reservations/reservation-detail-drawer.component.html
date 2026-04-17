@@ -1,0 +1,96 @@
+<div class="drawer">
+  <mat-toolbar color="primary" class="toolbar">
+    <span class="title">Reserva</span>
+    <span class="spacer"></span>
+    <button mat-icon-button type="button" aria-label="Cerrar panel de detalle" (click)="onClose()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </mat-toolbar>
+  @if (loading()) {
+    <div class="center"><mat-spinner /></div>
+  } @else if (detail(); as d) {
+    <div class="body">
+      <p class="muted">{{ d['reservation_number'] }}</p>
+      <h3 class="h3">{{ d['customer_name'] }}</h3>
+      <p>
+        <strong>Estado:</strong>
+        <span class="status-pill" [class]="statusCss(d['status'])">{{ d['status'] }}</span>
+      </p>
+      <p><strong>Inicio / fin:</strong> {{ d['date_start'] }} — {{ d['date_end'] || '—' }}</p>
+      <p><strong>Monto total:</strong> {{ d['total_amount'] }}</p>
+      @if (d['plan']; as plan) {
+        <p><strong>Plan:</strong> {{ $any(plan).name }}</p>
+      }
+      @if (d['room']; as room) {
+        <p><strong>Habitación:</strong> {{ $any(room).name }}</p>
+      }
+
+      <div *appHasRole="mutatorRoles" class="actions">
+        <button
+          *appHasRole="statusAdminRoles"
+          mat-stroked-button
+          type="button"
+          aria-label="Confirmar reserva"
+          (click)="confirmReservation()"
+        >
+          Confirmar
+        </button>
+        <button mat-stroked-button type="button" aria-label="Cambiar fechas de la reserva" (click)="openDates()">
+          Fechas
+        </button>
+        <button mat-stroked-button type="button" aria-label="Cancelar reserva" (click)="openCancel()">
+          Cancelar
+        </button>
+        @if (d['plan_id']) {
+          <button mat-stroked-button type="button" aria-label="Agregar actividad opcional" (click)="openAddOptional()">
+            + Opcional
+          </button>
+        }
+      </div>
+
+      <div *appHasRole="paymentRoles" class="actions pay">
+        <button
+          mat-flat-button
+          color="accent"
+          type="button"
+          aria-label="Generar enlace de pago Mercado Pago"
+          (click)="requestPaymentLink()"
+        >
+          Generar link de pago
+        </button>
+        @if (paymentUrl(); as url) {
+          <p class="pay-url">{{ url }}</p>
+          <button mat-button type="button" aria-label="Copiar URL de pago al portapapeles" (click)="copyPaymentUrl()">
+            Copiar URL
+          </button>
+        }
+      </div>
+
+      <h4>Actividades base (snapshot)</h4>
+      <mat-list>
+        @for (a of $any(d['activities_snapshot']) || []; track a.id || $index) {
+          <mat-list-item>
+            <span matListItemTitle>{{ a.activity_name }}</span>
+            <span matListItemLine>Extra: {{ a.extra_cost }}</span>
+          </mat-list-item>
+        } @empty {
+          <p class="muted">Sin actividades en snapshot.</p>
+        }
+      </mat-list>
+
+      <h4>Opcionales contratados</h4>
+      <mat-list>
+        @for (o of $any(d['optional_activities']) || []; track o.id || $index) {
+          <mat-list-item>
+            <span matListItemTitle>{{ o.activity_name_snapshot }}</span>
+            <span matListItemLine>Precio: {{ o.price_snapshot }} × {{ o.quantity }}</span>
+          </mat-list-item>
+        } @empty {
+          <p class="muted">Sin opcionales.</p>
+        }
+      </mat-list>
+    </div>
+  } @else {
+    <p class="muted body">No se pudo cargar el detalle.</p>
+  }
+</div>

@@ -1,0 +1,147 @@
+<mat-card>
+  <mat-card-header class="hdr">
+    <mat-card-title>Reservas</mat-card-title>
+    <a
+      mat-flat-button
+      color="primary"
+      *appHasRole="['SUPER_ADMIN', 'ADMIN', 'BUSINESS', 'AGENT']"
+      routerLink="/admin/reservations/new"
+      aria-label="Crear reserva manual"
+    >
+      Nueva reserva
+    </a>
+  </mat-card-header>
+  <mat-card-content class="filters">
+    <mat-form-field appearance="outline" class="filter">
+      <mat-label>Estado</mat-label>
+      <mat-select [formControl]="statusCtrl">
+        <mat-option value="">Todos</mat-option>
+        <mat-option value="PENDING">Pendiente</mat-option>
+        <mat-option value="PAYMENT_PENDING">Pago pendiente</mat-option>
+        <mat-option value="CONFIRMED">Confirmada</mat-option>
+        <mat-option value="CANCELLED">Cancelada</mat-option>
+        <mat-option value="COMPLETED">Completada</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="filter">
+      <mat-label>Desde</mat-label>
+      <input matInput type="date" [formControl]="dateFromCtrl" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="filter">
+      <mat-label>Hasta</mat-label>
+      <input matInput type="date" [formControl]="dateToCtrl" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="filter">
+      <mat-label>Habitación</mat-label>
+      <mat-select [formControl]="roomCtrl">
+        <mat-option value="">Todas</mat-option>
+        @for (r of roomOptions(); track r.id) {
+          <mat-option [value]="r.id">{{ r.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="filter">
+      <mat-label>Plan</mat-label>
+      <mat-select [formControl]="planCtrl">
+        <mat-option value="">Todos</mat-option>
+        @for (p of planOptions(); track p.id) {
+          <mat-option [value]="p.id">{{ p.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="filter grow">
+      <mat-label>Búsqueda</mat-label>
+      <input matInput placeholder="Nombre, documento o teléfono" [formControl]="qCtrl" />
+    </mat-form-field>
+    <div class="export-actions">
+      <button
+        mat-stroked-button
+        type="button"
+        aria-label="Exportar reservas filtradas a CSV"
+        (click)="exportCsv()"
+        [disabled]="exporting()"
+      >
+        CSV
+      </button>
+      <button
+        mat-stroked-button
+        type="button"
+        aria-label="Exportar reservas filtradas a Excel"
+        (click)="exportExcel()"
+        [disabled]="exporting()"
+      >
+        Excel
+      </button>
+      @if (exporting()) {
+        <mat-spinner diameter="24" />
+      }
+    </div>
+  </mat-card-content>
+</mat-card>
+
+@if (loading()) {
+  <div class="loading"><mat-spinner /></div>
+} @else {
+  <table mat-table [dataSource]="rows()" class="mat-elevation-z1 table">
+    <ng-container matColumnDef="reservation_number">
+      <th mat-header-cell *matHeaderCellDef>Número</th>
+      <td mat-cell *matCellDef="let row">{{ row.reservation_number }}</td>
+    </ng-container>
+    <ng-container matColumnDef="customer_name">
+      <th mat-header-cell *matHeaderCellDef>Cliente</th>
+      <td mat-cell *matCellDef="let row">{{ row.customer_name }}</td>
+    </ng-container>
+    <ng-container matColumnDef="service">
+      <th mat-header-cell *matHeaderCellDef>Servicio</th>
+      <td mat-cell *matCellDef="let row">
+        @if (row.plan_id) {
+          <span class="tag plan">Plan</span>
+        } @else if (row.room_id) {
+          <span class="tag room">Habitación</span>
+        } @else {
+          —
+        }
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="date_start">
+      <th mat-header-cell *matHeaderCellDef>Inicio</th>
+      <td mat-cell *matCellDef="let row">{{ row.date_start }}</td>
+    </ng-container>
+    <ng-container matColumnDef="date_end">
+      <th mat-header-cell *matHeaderCellDef>Fin</th>
+      <td mat-cell *matCellDef="let row">{{ row.date_end || '—' }}</td>
+    </ng-container>
+    <ng-container matColumnDef="status">
+      <th mat-header-cell *matHeaderCellDef>Estado</th>
+      <td mat-cell *matCellDef="let row">
+        <span class="status-pill" [class]="'st-' + (row.status || '').toLowerCase()">{{ row.status }}</span>
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="total_amount">
+      <th mat-header-cell *matHeaderCellDef>Monto</th>
+      <td mat-cell *matCellDef="let row">{{ row.total_amount }}</td>
+    </ng-container>
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef></th>
+      <td mat-cell *matCellDef="let row">
+        <button mat-button type="button" aria-label="Abrir detalle de reserva" (click)="openRow(row)">
+          Detalle
+        </button>
+      </td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr
+      mat-row
+      *matRowDef="let row; columns: displayedColumns"
+      class="click-row"
+      (click)="openRow(row)"
+    ></tr>
+  </table>
+  <mat-paginator
+    [length]="total()"
+    [pageIndex]="pageIndex()"
+    [pageSize]="pageSize()"
+    [pageSizeOptions]="[10, 20, 50]"
+    (page)="onPage($event)"
+  />
+}

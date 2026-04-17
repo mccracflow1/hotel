@@ -1,0 +1,84 @@
+.drawer {
+  width: min(420px, 92vw);
+  min-height: 200px;
+}
+
+.toolbar .title {
+  font-size: 1rem;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.body {
+  padding: 1rem;
+}
+
+.h3 {
+  margin: 0 0 0.5rem;
+}
+
+.muted {
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.875rem;
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.status-pill {
+  display: inline-block;
+  margin-left: 0.35rem;
+  font-size: 0.75rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  font-weight: 500;
+}
+
+.st-pending,
+.st-payment_pending {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.st-confirmed {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.st-cancelled {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.st-completed {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+h4 {
+  margin: 1.25rem 0 0.35rem;
+  font-size: 0.95rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.actions.pay {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.pay-url {
+  font-size: 0.75rem;
+  word-break: break-all;
+  margin: 0.25rem 0;
+}
