@@ -38,12 +38,59 @@
 
 ---
 
+## Protocolo de Herramientas MCP
+
+> **Regla de oro:** antes de escribir código que consuma la API de una librería, SDK, framework o servicio externo, consultar **Context7** para obtener documentación actualizada. El conocimiento de entrenamiento del asistente puede quedar desfasado respecto a la versión instalada en el proyecto.
+
+### Cómo usar Context7
+
+```bash
+# Paso 1 — resolver el ID de la librería (nombre oficial con puntuación exacta)
+npx ctx7@latest library "Knex.js" "migrations PostgreSQL up down"
+
+# Paso 2 — obtener la documentación
+npx ctx7@latest docs /knex/knex "migrations PostgreSQL up down"
+```
+
+> No ejecutar más de 3 comandos por pregunta. No incluir credenciales en las queries. Si el comando falla por cuota, ejecutar `npx ctx7@latest login`.
+
+### MCPs disponibles en el proyecto
+
+| MCP | Herramienta | Cuándo usarlo |
+|-----|-------------|--------------|
+| **Context7** | `npx ctx7@latest` | **Toda implementación que use una librería o SDK.** Cubre Knex, Express 5, JWT, Multer, Sharp, @mercadopago/sdk-node, Angular Material, Chart.js, Docker, Railway, Vercel, n8n y cualquier otra dependencia del stack. |
+| **Claude in Chrome** | `mcp__claude-in-chrome__*` | Verificar UI del portal Angular y landing en navegador; automatizar flujos visuales; inspeccionar llamadas de red e inspeccionar consola desde la interfaz. |
+| **Pencil** | `mcp__pencil__*` | Diseñar layouts y componentes del portal Angular y la landing antes de implementarlos; revisar diseños con `.pen` files. |
+| **Notion** | `mcp__notion__*` | Documentar decisiones de arquitectura, runbook de operaciones, actas de capacitación y entregas al cliente. |
+| **Google Drive** | `mcp__claude_ai_Google_Drive__*` | Almacenar y compartir backups de BD, documentación técnica y manuales del cliente. |
+| **Gmail** | `mcp__claude_ai_Gmail__*` | Verificar entrega de correos de forgot-password y notificaciones durante pruebas de integración. |
+
+### Protocolo por tipo de tarea
+
+| Tipo de tarea | MCP / acción obligatoria |
+|---------------|--------------------------|
+| Instalar o configurar librería nueva | `ctx7 library "<nombre>"` → `ctx7 docs <id>` **antes** de escribir código |
+| Endpoint que consume SDK externo | `ctx7 docs` para verificar firma de métodos, opciones y manejo de errores del SDK |
+| Componente Angular Material nuevo | `ctx7 docs` del componente + **Pencil** para diseño previo si tiene layout complejo |
+| Validar UI implementada | **Claude in Chrome** — navegar el flujo completo y revisar consola y red |
+| Configurar infraestructura (Docker, Railway, Vercel, Netlify) | `ctx7 docs` para verificar sintaxis y flags de la versión actual |
+| Documentar y entregar al cliente | **Notion** para runbook · **Google Drive** para archivos binarios |
+
+---
+
 ## Plan Día a Día
 
 ---
 
 ### SEMANA 1 — Diseño del Modelo de Datos y Cimientos del Proyecto
 *MVP Fase 0 en curso*
+
+> **ctx7 — Semana 1 · Consultar antes de implementar:**
+> - `"Knex.js"` → `"schema builder createTable migrations PostgreSQL"`
+> - `"Express.js"` → `"Express 5 app setup middleware error handler"`
+> - `"Winston"` → `"logger transports format levels Node.js"`
+> - `"Joi"` → `"schema validation object string number required"`
+> - `"dotenv"` → `"environment variables Node.js config"`
 
 ---
 
@@ -109,6 +156,14 @@
 
 ### SEMANA 2 — Autenticación, RBAC y Módulo de Disponibilidad
 *MVP Fase 0 en curso*
+
+> **ctx7 — Semana 2 · Consultar antes de implementar:**
+> - `"jsonwebtoken"` → `"sign verify access token refresh token options"`
+> - `"bcryptjs"` → `"hash compare password async Node.js"`
+> - `"express-rate-limit"` → `"rate limiting middleware Express configuration"`
+> - `"swagger-jsdoc"` → `"OpenAPI 3.0 JSDoc annotations"`
+> - `"swagger-ui-express"` → `"serve swagger UI Express setup"`
+> - `"node-cache"` → `"in-memory cache TTL get set Node.js"`
 
 ---
 
@@ -187,6 +242,11 @@
 ### SEMANA 3 — Habitaciones, Planes y Actividades Base/Opcionales
 *MVP Fase 1 en curso*
 
+> **ctx7 — Semana 3 · Consultar antes de implementar:**
+> - `"Knex.js"` → `"transactions SELECT FOR UPDATE SKIP LOCKED"`
+> - `"Knex.js"` → `"cursor-based pagination query builder"`
+> - `"Joi"` → `"conditional validation when dependencies object schema"`
+
 ---
 
 #### Día 11 · Lunes — `C2` Módulo de Habitaciones y Servicios — CRUD Completo
@@ -259,6 +319,11 @@
 - **Precios congelados en opcionales:** `reservation_optional_activities` usa `price_snapshot` / nombre snapshot según contrato de API.
 - **Auditoría:** operaciones críticas registran `user_id` cuando aplica (portal); el rol `AGENT` actúa sin UI de portal.
 - **Idempotencia:** reutilizar middleware existente en operaciones críticas donde el contrato lo exija (p. ej. creación ya cubierta en S3; revisar replay en flujos que agreguen efectos económicos si se extienden).
+
+> **ctx7 — Semana 4 · Consultar antes de implementar:**
+> - `"Knex.js"` → `"aggregate groupBy raw query pagination"`
+> - `"Joi"` → `"json schema array object nested validation"`
+> - `"csv-writer"` o `"json2csv"` → `"export CSV Node.js streams"`
 
 ---
 
@@ -399,6 +464,12 @@
 ### SEMANA 5 — Pagos MercadoPago + Biblioteca de Medios + CMS
 *MVP Fase 2 en curso*
 
+> **ctx7 — Semana 5 · Consultar antes de implementar:**
+> - `"MercadoPago"` → `"sdk-node Preference create checkout pro webhook PSE"`
+> - `"Multer"` → `"file upload multipart/form-data limits storage Node.js"`
+> - `"Sharp"` → `"resize thumbnail image processing Node.js"`
+> - `"AWS SDK"` → `"S3 PutObject upload presigned URL"` *(o `"Cloudinary"` → `"upload image Node.js SDK"` según proveedor elegido)*
+
 ---
 
 #### Día 21 · Lunes — `C3` Integración MercadoPago — SDK y Creación de Preferencia
@@ -477,6 +548,15 @@
 ### SEMANA 6 — Portal Angular — Fundamentos y Primeros Módulos
 *MVP Fase 3 en curso*
 
+> **ctx7 — Semana 6 · Consultar antes de implementar:**
+> - `"Angular"` → `"standalone components lazy loading routing guards Angular 17"`
+> - `"Angular Material"` → `"custom theme sidenav toolbar table paginator"`
+> - `"Angular"` → `"HTTP interceptor refresh token 401 retry"`
+> - `"Chart.js"` → `"bar chart responsive configuration"`
+>
+> **Pencil:** diseñar layout principal (sidebar + topbar + área de contenido) y pantalla de login antes del Día 27.
+> **Claude in Chrome:** verificar en navegador al finalizar cada día de UI implementada.
+
 ---
 
 #### Día 26 · Lunes — `C4` Setup Angular — Arquitectura, Autenticación y Layout
@@ -542,6 +622,14 @@
 ### SEMANA 7 — Portal Angular — Reservas, Planes y Opcionales
 *MVP Fase 3 en curso*
 
+> **ctx7 — Semana 7 · Consultar antes de implementar:**
+> - `"Angular Material"` → `"dialog datepicker chip list reactive forms"`
+> - `"Angular CDK"` → `"drag drop list reorder sort"`
+> - `"ExcelJS"` → `"create workbook worksheet export xlsx Node.js browser"`
+> - `"jsPDF"` → `"autoTable PDF export table browser"`
+>
+> **Claude in Chrome:** recorrer el flujo completo de reservas (listado → detalle → acciones → exportación) al finalizar el Día 32.
+
 ---
 
 #### Día 31 · Lunes — `C4` Módulo de Reservas — Listado y Filtros Avanzados
@@ -606,6 +694,15 @@
 
 ### SEMANA 8 — Portal Admin Completo + Inicio Landing Page
 *MVP Fase 3 → 4*
+
+> **ctx7 — Semana 8 · Consultar antes de implementar:**
+> - `"Angular CDK"` → `"drag drop file upload progress"`
+> - `"Angular Material"` → `"date range picker form field color picker"`
+> - `"Tailwind CSS"` → `"responsive grid flexbox dark mode"`
+> - `"Google Maps"` → `"Maps Embed API iframe parameters"`
+>
+> **Pencil:** diseñar la estructura completa de la landing (hero, servicios, planes, galería, FAQ, footer) antes del Día 39.
+> **Claude in Chrome:** verificar landing completa en mobile y desktop al finalizar el Día 40.
 
 ---
 
@@ -684,6 +781,13 @@
 ### SEMANA 9 — Landing Completa + MCP Server Activo
 *MVP Fase 4 en curso*
 
+> **ctx7 — Semana 9 · Consultar antes de implementar:**
+> - `"n8n"` → `"MCP Server Trigger tool definition JSON Schema HTTP Request node"`
+> - `"n8n"` → `"IF node error handling HTTP response status code"`
+> - `"Tailwind CSS"` → `"lightbox gallery accordion FAQ lazy loading images"`
+>
+> **Claude in Chrome:** recorrer el flujo completo desde la landing: buscar disponibilidad → seleccionar plan → rellenar formulario → llamar API → verificar redireccionamiento a pago (Día 41). Probar el widget de chat con preguntas reales (Día 42).
+
 ---
 
 #### Día 41 · Lunes — `C5` Página de Detalle de Plan + Flujo de Reserva Web
@@ -760,6 +864,18 @@
 
 ### SEMANA 10 — Agente IA WhatsApp + DevOps + Entrega Final
 *MVP Fase 5 — ENTREGA*
+
+> **ctx7 — Semana 10 · Consultar antes de implementar:**
+> - `"n8n"` → `"AI Agent conversationalAgent Window Buffer Memory session key"`
+> - `"n8n"` → `"WhatsApp Cloud API webhook verification send message"`
+> - `"Docker"` → `"multi-stage build Node.js HEALTHCHECK .dockerignore"`
+> - `"Railway"` → `"deploy Node.js PostgreSQL plugin environment variables custom domain"`
+> - `"Vercel"` → `"Angular deploy build output directory"`
+> - `"Netlify"` → `"static site deploy redirects _redirects"`
+>
+> **Claude in Chrome:** ejecutar prueba end-to-end de producción completa (Día 50): reserva desde la landing → pago → webhook → portal admin → consulta por WhatsApp.
+> **Notion:** crear runbook de operaciones antes de la sesión de capacitación del Día 50.
+> **Google Drive:** subir el runbook y manuales entregados al cliente.
 
 ---
 

@@ -1,0 +1,483 @@
+openapi: 3.0.3
+info:
+  title: Sofia Hotel API — MVP Fase 2 (005) Pagos, medios y CMS
+  version: 0.3.0
+  description: >
+    Contratos REST para MercadoPago (creación de checkout, webhook, conciliación),
+    biblioteca de medios, asociación a habitaciones/planes, y CMS (site_content + FAQs).
+    Prefijo base `/api/v1`. Complementa `specs/003-rooms-planes-reservas/contracts/openapi.yaml`
+    y `specs/004-complete-reservation-lifecycle/contracts/openapi.yaml`.
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local
+
+tags:
+  - name: Payments
+  - name: Media
+  - name: SiteContent
+  - name: FAQs
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              enum: [VALIDATION_ERROR, NOT_FOUND, CONFLICT, FORBIDDEN, UNAUTHORIZED]
+            message: { type: string }
+            details: { nullable: true }
+
+    CreatePaymentRequest:
+      type: object
+      required: [reservation_id, amount]
+      properties:
+        reservation_id: { type: string, format: uuid }
+        amount: { type: number, description: Monto en COP (entero) }
+
+    CreatePaymentResponse:
+      type: object
+      properties:
+        preference_id: { type: string }
+        checkout_url: { type: string, format: uri }
+        payment_attempt_id: { type: string, format: uuid }
+
+    ReconciliationRow:
+      type: object
+      properties:
+        payment_attempt_id: { type: string, format: uuid }
+        reservation_id: { type: string, format: uuid }
+        internal_status: { type: string }
+        external_status: { type: string, nullable: true }
+        mismatch: { type: boolean }
+        mismatch_reason: { type: string, nullable: true }
+
+    MediaItem:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        filename: { type: string }
+        original_url: { type: string, format: uri }
+        thumbnail_url: { type: string, format: uri, nullable: true }
+        file_type: { type: string, enum: [image, video, youtube, vimeo] }
+        mime_type: { type: string, nullable: true }
+        size_bytes: { type: integer, format: int64 }
+
+    SiteContentEntry:
+      type: object
+      properties:
+        section: { type: string }
+        key: { type: string }
+        value: { type: string, nullable: true }
+        type: { type: string, enum: [text, image_url, list_json, richtext] }
+
+    FAQ:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        question: { type: string }
+        answer: { type: string }
+        sort_order: { type: integer }
+        is_active: { type: boolean }
+
+    PublicSiteBundle:
+      type: object
+      description: Agregado para consumo de landing sin autenticación
+      properties:
+        site_content:
+          type: array
+          items: { $ref: '#/components/schemas/SiteContentEntry' }
+        faqs:
+          type: array
+          items: { $ref: '#/components/schemas/FAQ' }
+
+paths:
+  /payments/create:
+    post:
+      tags: [Payments]
+      summary: Crear Preference MercadoPago y registrar payment_attempt
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreatePaymentRequest' }
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/CreatePaymentResponse' }
+        '400': { description: Validación, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '401': { description: Sin token }
+        '403': { description: Rol insuficiente }
+        '409': { description: Conflicto de negocio }
+
+  /payments/webhook:
+    post:
+      tags: [Payments]
+      summary: Webhook MercadoPago (sin JWT; validación por firma)
+      security: []
+      parameters:
+        - in: header
+          name: x-signature
+          schema: { type: string }
+        - in: header
+          name: x-request-id
+          schema: { type: string }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        '200':
+          description: Acuse recibido (cuerpo puede ser texto plano mínimo)
+
+  /payments/reconciliation:
+    get:
+      tags: [Payments]
+      summary: Conciliar intentos internos vs estado en MercadoPago
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: from
+          schema: { type: string, format: date-time }
+        - in: query
+          name: to
+          schema: { type: string, format: date-time }
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 50 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ReconciliationRow' }
+                  meta:
+                    type: object
+                    properties:
+                      page: { type: integer }
+                      limit: { type: integer }
+                      total: { type: integer }
+
+  /media/upload:
+    post:
+      tags: [Media]
+      summary: Subir archivo (multipart)
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/MediaItem' }
+
+  /media:
+    get:
+      tags: [Media]
+      summary: Listar biblioteca
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: file_type
+          schema: { type: string, enum: [image, video, youtube, vimeo] }
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/MediaItem' }
+                  meta:
+                    type: object
+
+  /media/{id}:
+    delete:
+      tags: [Media]
+      summary: Eliminar medio si no está en uso
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '204': { description: Eliminado }
+        '409': { description: En uso }
+
+  /site-content/public:
+    get:
+      tags: [SiteContent]
+      summary: Contenido público consolidado para landing
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/PublicSiteBundle' }
+
+  /site-content/{section}:
+    get:
+      tags: [SiteContent]
+      summary: Obtener entradas de una sección (admin)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: section
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+    put:
+      tags: [SiteContent]
+      summary: Reemplazar/upsert entradas de una sección
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: section
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entries:
+                  type: array
+                  items: { $ref: '#/components/schemas/SiteContentEntry' }
+      responses:
+        '200': { description: OK }
+
+  /faqs:
+    get:
+      tags: [FAQs]
+      summary: Listar FAQs activas ordenadas (público, alineado a CONTEXTO_MAESTRO §9)
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/FAQ' }
+    post:
+      tags: [FAQs]
+      summary: Crear FAQ
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [question, answer]
+              properties:
+                question: { type: string }
+                answer: { type: string }
+                sort_order: { type: integer }
+      responses:
+        '201': { description: Creado }
+
+  /faqs/manage:
+    get:
+      tags: [FAQs]
+      summary: Listar todas las FAQs incl. inactivas (portal admin; no figura en tabla pública del maestro — extensión práctica para CMS)
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/FAQ' }
+
+  /faqs/reorder:
+    put:
+      tags: [FAQs]
+      summary: Reordenar FAQs
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ids]
+              properties:
+                ids:
+                  type: array
+                  items: { type: string, format: uuid }
+      responses:
+        '200': { description: OK }
+
+  /faqs/{id}:
+    put:
+      tags: [FAQs]
+      summary: Actualizar FAQ
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: OK }
+    delete:
+      tags: [FAQs]
+      summary: Eliminar FAQ
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '204': { description: Eliminado }
+
+  /rooms/{roomId}/media:
+    post:
+      tags: [Media]
+      summary: Asociar medio existente a habitación
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: roomId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [media_id]
+              properties:
+                media_id: { type: string, format: uuid }
+                is_cover: { type: boolean }
+                sort_order: { type: integer }
+      responses:
+        '201': { description: Asociado }
+
+  /rooms/{roomId}/media/{mediaId}:
+    delete:
+      tags: [Media]
+      summary: Desasociar medio de habitación
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: roomId
+          required: true
+          schema: { type: string, format: uuid }
+        - in: path
+          name: mediaId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '204': { description: Desasociado }
+
+  /plans/{planId}/media:
+    post:
+      tags: [Media]
+      summary: Asociar medio existente a plan
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: planId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [media_id]
+              properties:
+                media_id: { type: string, format: uuid }
+                is_cover: { type: boolean }
+                sort_order: { type: integer }
+      responses:
+        '201': { description: Asociado }
+
+  /plans/{planId}/media/{mediaId}:
+    delete:
+      tags: [Media]
+      summary: Desasociar medio de plan
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: planId
+          required: true
+          schema: { type: string, format: uuid }
+        - in: path
+          name: mediaId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '204': { description: Desasociado }
