@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hotel — Sitio público</title>
+    <meta name="description" content="Contenido pendiente de configuración desde el portal." />
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="min-h-screen bg-slate-950 text-slate-100 antialiased">
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur">
+      <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
+        <span class="text-lg font-semibold tracking-tight">Hotel</span>
+        <nav class="hidden gap-4 text-sm text-slate-300 sm:flex" aria-label="Principal">
+          <a class="hover:text-white" href="#hero">Inicio</a>
+          <a class="hover:text-white" href="#services">Servicios</a>
+          <a class="hover:text-white" href="#plans">Planes</a>
+          <a class="hover:text-white" href="#gallery">Galería</a>
+          <a class="hover:text-white" href="#faq">FAQ</a>
+          <a class="hover:text-white" href="#map">Mapa</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section id="hero" class="mx-auto max-w-5xl px-4 py-16">
+        <p class="text-sm uppercase tracking-wide text-amber-400">Hero</p>
+        <h1 class="mt-2 text-3xl font-bold sm:text-4xl">Configuración pendiente</h1>
+        <p class="mt-4 max-w-2xl text-slate-300">
+          Esta sección se completa desde el CMS del portal. Mientras no haya datos publicados, se muestra este
+          mensaje explícito (SC-001).
+        </p>
+      </section>
+
+      <section id="contact" class="border-t border-slate-800 px-4 py-14">
+        <div class="mx-auto max-w-5xl">
+          <p class="text-sm uppercase tracking-wide text-amber-400">Contacto</p>
+          <h2 class="mt-2 text-2xl font-semibold">Datos de contacto</h2>
+          <p class="mt-3 text-slate-400">Contenido pendiente.</p>
+        </div>
+      </section>
+
+      <section id="services" class="border-t border-slate-800 bg-slate-900/40 px-4 py-14">
+        <div class="mx-auto max-w-5xl">
+          <p class="text-sm uppercase tracking-wide text-amber-400">Servicios</p>
+          <h2 class="mt-2 text-2xl font-semibold">Habitaciones</h2>
+          <p class="mt-3 text-slate-400">Contenido pendiente — conectar <code class="text-amber-200">API_BASE_URL</code> en <code>app.js</code>.</p>
+        </div>
+      </section>
+
+      <section id="plans" class="px-4 py-14">
+        <div class="mx-auto max-w-5xl">
+          <p class="text-sm uppercase tracking-wide text-amber-400">Planes</p>
+          <h2 class="mt-2 text-2xl font-semibold">Estadías y paquetes</h2>
+          <p class="mt-3 text-slate-400">Contenido pendiente.</p>
+        </div>
+      </section>
+
+      <section id="gallery" class="border-t border-slate-800 bg-slate-900/40 px-4 py-14">
+        <div class="mx-auto max-w-5xl">
+          <p class="text-sm uppercase tracking-wide text-amber-400">Galería</p>
+          <h2 class="mt-2 text-2xl font-semibold">Galería del hotel</h2>
+          <p class="mt-3 text-slate-400">Contenido pendiente.</p>
+        </div>
+      </section>
+
+      <section id="faq" class="px-4 py-14">
+        <div class="mx-auto max-w-5xl">
+          <p class="text-sm uppercase tracking-wide text-amber-400">Preguntas frecuentes</p>
+          <h2 class="mt-2 text-2xl font-semibold">FAQ</h2>
+          <p class="mt-3 text-slate-400">Contenido pendiente.</p>
+        </div>
+      </section>
+
+      <section id="map" class="border-t border-slate-800 bg-slate-900/40 px-4 py-14">
+        <div class="mx-auto max-w-5xl">
+          <p class="text-sm uppercase tracking-wide text-amber-400">Mapa</p>
+          <h2 class="mt-2 text-2xl font-semibold">Ubicación</h2>
+          <p class="mt-3 text-slate-400">Contenido pendiente.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer id="footer" class="mt-8 border-t border-slate-800 bg-slate-900 px-4 py-10 text-center text-sm text-slate-500">
+      Pie de página — datos de contacto pendientes de configuración.
+    </footer>
+    <script defer src="./app.js"></script>
+  </body>
+</html>
