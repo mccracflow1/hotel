@@ -1,0 +1,84 @@
+<h1 class="title">Disponibilidad</h1>
+
+<mat-tab-group>
+  <mat-tab label="Calendario">
+    <div class="pad">
+      <div class="cal-head">
+        <button mat-button type="button" (click)="prevMonth()">← Mes anterior</button>
+        <strong>{{ month() }}/{{ year() }}</strong>
+        <button mat-button type="button" (click)="nextMonth()">Mes siguiente →</button>
+      </div>
+      @if (loadingCal()) {
+        <p>Cargando calendario…</p>
+      } @else {
+        <div class="grid">
+          @for (d of dias(); track $index) {
+            <div
+              class="cell"
+              [class.cell--low]="pct(d) < 33"
+              [class.cell--med]="pct(d) >= 33 && pct(d) < 66"
+              [class.cell--high]="pct(d) >= 66"
+            >
+              <span class="day">{{ d['fecha'] }}</span>
+              <span class="pct">{{ d['porcentaje_ocupacion'] }}%</span>
+            </div>
+          }
+        </div>
+      }
+      @if (canBlock()) {
+        <mat-card class="block-card">
+          <mat-card-title>Bloquear fechas</mat-card-title>
+          <mat-card-content>
+            <form [formGroup]="blockForm" (ngSubmit)="submitBlock()">
+              <mat-form-field appearance="outline" class="wide">
+                <mat-label>Room ID (UUID)</mat-label>
+                <input matInput formControlName="room_id" placeholder="O plan ID abajo" />
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="wide">
+                <mat-label>Plan ID (UUID)</mat-label>
+                <input matInput formControlName="plan_id" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Desde</mat-label>
+                <input matInput type="date" formControlName="fecha_inicio" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Hasta</mat-label>
+                <input matInput type="date" formControlName="fecha_fin" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Slots</mat-label>
+                <input matInput type="number" formControlName="slots_a_bloquear" />
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="wide">
+                <mat-label>Motivo</mat-label>
+                <input matInput formControlName="motivo" />
+              </mat-form-field>
+              <button mat-flat-button color="primary" type="submit" [disabled]="blockForm.invalid">
+                Bloquear
+              </button>
+            </form>
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+  </mat-tab>
+  <mat-tab label="Temporadas">
+    <div class="pad">
+      @if (loadingSeasons()) {
+        <p>Cargando…</p>
+      } @else {
+        <table mat-table [dataSource]="seasons()" class="fullw">
+          @for (col of seasonCols; track col) {
+            <ng-container [matColumnDef]="col">
+              <th mat-header-cell *matHeaderCellDef>{{ col }}</th>
+              <td mat-cell *matCellDef="let row">{{ row[col] }}</td>
+            </ng-container>
+          }
+          <tr mat-header-row *matHeaderRowDef="seasonCols"></tr>
+          <tr mat-row *matRowDef="let row; columns: seasonCols"></tr>
+        </table>
+      }
+    </div>
+  </mat-tab>
+</mat-tab-group>

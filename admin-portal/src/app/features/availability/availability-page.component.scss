@@ -1,0 +1,63 @@
+.title {
+  margin: 0 0 1rem;
+}
+
+.pad {
+  padding: 1rem 0;
+}
+
+.cal-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.cell {
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 6px;
+  padding: 0.35rem;
+  font-size: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.cell--low {
+  background: color-mix(in srgb, var(--mat-sys-tertiary) 12%, transparent);
+}
+.cell--med {
+  background: color-mix(in srgb, var(--mat-sys-secondary) 18%, transparent);
+}
+.cell--high {
+  background: color-mix(in srgb, var(--mat-sys-error) 15%, transparent);
+}
+
+.day {
+  font-weight: 600;
+}
+
+.block-card {
+  margin-top: 1rem;
+}
+
+.block-card mat-form-field {
+  margin-right: 0.5rem;
+}
+
+.wide {
+  width: 100%;
+  max-width: 420px;
+  display: block;
+}
+
+.fullw {
+  width: 100%;
+}
