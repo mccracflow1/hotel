@@ -65,6 +65,7 @@ app.use('/api/v1/business-config', require('./modules/business-config/business-c
 app.use('/api/v1/reports', require('./modules/reports/reports.routes'));
 app.use('/api/v1/payments', require('./modules/payments/payments.routes'));
 app.use('/api/v1/media', require('./modules/media/media.routes'));
+app.use('/api/v1/public', require('./modules/public-catalog/public-catalog.routes'));
 app.use('/api/v1', require('./modules/cms/cms.routes'));
 
 // ── 404 ───────────────────────────────────────────────────────────────────────

@@ -11,6 +11,9 @@ const OPS = {
   RESERVATION_OPTIONAL_ADD: 'reservation:optional-add',
   INVENTORY_MOVEMENT_CREATE: 'inventory:movement',
   PAYMENT_CREATE: 'payment:create',
+  CMS_SITE_CONTENT_PUT: 'cms:site-content:put',
+  BUSINESS_CONFIG_PUT: 'business-config:put',
+  MEDIA_UPLOAD: 'media:upload',
 };
 
 /**
@@ -46,6 +49,9 @@ const idempotencyReservationCancel = idempotencyStrict(OPS.RESERVATION_CANCEL);
 const idempotencyReservationOptionalAdd = idempotencyStrict(OPS.RESERVATION_OPTIONAL_ADD);
 const idempotencyInventoryMovement = idempotencyStrict(OPS.INVENTORY_MOVEMENT_CREATE);
 const idempotencyPaymentCreate = idempotencyStrict(OPS.PAYMENT_CREATE);
+const idempotencyCmsSiteContentPut = idempotencyStrict(OPS.CMS_SITE_CONTENT_PUT);
+const idempotencyBusinessConfigPut = idempotencyStrict(OPS.BUSINESS_CONFIG_PUT);
+const idempotencyMediaUpload = idempotencyStrict(OPS.MEDIA_UPLOAD);
 
 async function runIdempotency(req, res, next, options) {
   const { requireKey, failClosed, operation } = options;
@@ -135,6 +141,9 @@ module.exports = {
   idempotencyReservationOptionalAdd,
   idempotencyInventoryMovement,
   idempotencyPaymentCreate,
+  idempotencyCmsSiteContentPut,
+  idempotencyBusinessConfigPut,
+  idempotencyMediaUpload,
   idempotencyStrict,
   OPS,
 };

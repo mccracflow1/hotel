@@ -18,8 +18,23 @@ const swaggerDocument = {
     { name: 'Media', description: 'Media library and room/plan associations' },
     { name: 'SiteContent', description: 'CMS site sections' },
     { name: 'FAQs', description: 'Landing FAQs' },
+    { name: 'Public', description: 'Marketing catalog for landing (no auth)' },
   ],
   paths: {
+    '/v1/public/rooms': {
+      get: {
+        summary: 'List rooms (public marketing)',
+        tags: ['Public'],
+        responses: { 200: { description: 'OK' } },
+      },
+    },
+    '/v1/public/plans': {
+      get: {
+        summary: 'List plans (public marketing)',
+        tags: ['Public'],
+        responses: { 200: { description: 'OK' } },
+      },
+    },
     '/v1/rooms': {
       get: {
         summary: 'List rooms (public or admin with Bearer)',
@@ -135,6 +150,7 @@ const swaggerDocument = {
         summary: 'Update business configuration',
         tags: ['BusinessConfig'],
         security: [{ BearerAuth: [] }],
+        parameters: [{ name: 'Idempotency-Key', in: 'header', required: true, schema: { type: 'string' } }],
         responses: { 200: { description: 'OK' } },
       },
     },
@@ -196,9 +212,10 @@ const swaggerDocument = {
     },
     '/v1/media/upload': {
       post: {
-        summary: 'Upload media (multipart image)',
+        summary: 'Upload media (multipart image or mp4/mov video)',
         tags: ['Media'],
         security: [{ BearerAuth: [] }],
+        parameters: [{ name: 'Idempotency-Key', in: 'header', required: true, schema: { type: 'string' } }],
         responses: { 201: { description: 'Created' } },
       },
     },
@@ -210,7 +227,23 @@ const swaggerDocument = {
         responses: { 200: { description: 'OK' } },
       },
     },
+    '/v1/media/{id}/usage': {
+      get: {
+        summary: 'List referencing entities for a media item',
+        tags: ['Media'],
+        security: [{ BearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: { 200: { description: 'OK' } },
+      },
+    },
     '/v1/media/{id}': {
+      patch: {
+        summary: 'Rename media (filename)',
+        tags: ['Media'],
+        security: [{ BearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: { 200: { description: 'OK' } },
+      },
       delete: {
         summary: 'Delete unused media',
         tags: ['Media'],
@@ -236,6 +269,7 @@ const swaggerDocument = {
         summary: 'Replace site content section',
         tags: ['SiteContent'],
         security: [{ BearerAuth: [] }],
+        parameters: [{ name: 'Idempotency-Key', in: 'header', required: true, schema: { type: 'string' } }],
         responses: { 200: { description: 'OK' } },
       },
     },
