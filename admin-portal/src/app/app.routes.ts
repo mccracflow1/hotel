@@ -33,6 +33,38 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/availability/availability.routes').then((m) => m.default),
       },
+      {
+        path: 'reservations',
+        canActivate: [roleGuard],
+        data: { roles: ['SUPER_ADMIN', 'ADMIN', 'BUSINESS', 'VIEWER', 'AGENT'] },
+        loadChildren: () =>
+          import('./features/reservations/reservations.routes').then((m) => m.default),
+      },
+      {
+        path: 'plans',
+        canActivate: [roleGuard],
+        data: { roles: ['SUPER_ADMIN', 'ADMIN'] },
+        loadChildren: () => import('./features/plans/plans.routes').then((m) => m.default),
+      },
+      {
+        path: 'optional-activities',
+        canActivate: [roleGuard],
+        data: { roles: ['SUPER_ADMIN', 'ADMIN'] },
+        loadChildren: () =>
+          import('./features/optional-activities/optional-activities.routes').then((m) => m.default),
+      },
+      {
+        path: 'inventory',
+        canActivate: [roleGuard],
+        data: { roles: ['SUPER_ADMIN', 'ADMIN', 'BUSINESS', 'VIEWER', 'AGENT'] },
+        loadChildren: () => import('./features/inventory/inventory.routes').then((m) => m.default),
+      },
+      {
+        path: 'reports',
+        canActivate: [roleGuard],
+        data: { roles: ['SUPER_ADMIN', 'ADMIN', 'BUSINESS', 'VIEWER', 'AGENT'] },
+        loadChildren: () => import('./features/reports/reports.routes').then((m) => m.default),
+      },
     ],
   },
   { path: '**', redirectTo: 'admin/dashboard' },
