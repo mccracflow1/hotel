@@ -65,6 +65,28 @@ export const routes: Routes = [
         data: { roles: ['SUPER_ADMIN', 'ADMIN', 'BUSINESS', 'VIEWER', 'AGENT'] },
         loadChildren: () => import('./features/reports/reports.routes').then((m) => m.default),
       },
+      {
+        path: 'cms',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'SUPER_ADMIN'] },
+        loadChildren: () => import('./features/cms/cms.routes').then((m) => m.default),
+      },
+      {
+        path: 'users',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'SUPER_ADMIN'] },
+        loadChildren: () => import('./features/users-admin/users-admin.routes').then((m) => m.default),
+      },
+      {
+        path: 'settings',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'SUPER_ADMIN'] },
+        loadChildren: () => import('./features/settings/settings.routes').then((m) => m.default),
+      },
+      {
+        path: 'profile',
+        loadChildren: () => import('./features/profile/profile.routes').then((m) => m.default),
+      },
     ],
   },
   { path: '**', redirectTo: 'admin/dashboard' },

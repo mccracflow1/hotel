@@ -52,6 +52,25 @@ export const NAV_ITEMS: NavItem[] = [
     icon: 'bar_chart',
     roles: ['SUPER_ADMIN', 'ADMIN', 'BUSINESS', 'VIEWER', 'AGENT'],
   },
+  {
+    label: 'CMS',
+    path: '/admin/cms',
+    icon: 'web',
+    roles: ['ADMIN', 'SUPER_ADMIN'],
+  },
+  {
+    label: 'Usuarios',
+    path: '/admin/users',
+    icon: 'group',
+    roles: ['ADMIN', 'SUPER_ADMIN'],
+  },
+  {
+    label: 'Configuración',
+    path: '/admin/settings',
+    icon: 'tune',
+    roles: ['ADMIN', 'SUPER_ADMIN'],
+  },
+  { label: 'Perfil', path: '/admin/profile', icon: 'person' },
 ];
 
 export function navItemsForRole(role: UserRole | undefined): NavItem[] {
