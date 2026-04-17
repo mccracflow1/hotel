@@ -128,7 +128,13 @@ function buildReservationListQuery(db, filters) {
 }
 
 async function countReservations(db, filters) {
-  const row = await buildReservationListQuery(db, filters).clone().count('r.id as c').first();
+  // clearSelect() quita el select('r.*') aplicado por buildReservationListQuery
+  // para que el count() genere un SELECT agregado válido (sin GROUP BY).
+  const row = await buildReservationListQuery(db, filters)
+    .clone()
+    .clearSelect()
+    .count('r.id as c')
+    .first();
   return Number(row?.c || 0);
 }
 
