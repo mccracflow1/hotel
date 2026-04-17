@@ -1,0 +1,41 @@
+.title {
+  margin: 0 0 1rem;
+  font-size: 1.35rem;
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+  padding: 3rem;
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.kpi .big {
+  font-size: 1.75rem;
+  margin: 0.25rem 0 0;
+}
+
+.hint {
+  font-size: 0.8rem;
+  color: var(--mat-sys-error);
+  margin: 0.25rem 0 0;
+}
+
+.chart-card {
+  margin-bottom: 1rem;
+}
+
+.chart-wrap {
+  height: 220px;
+  position: relative;
+}
+
+.fullw {
+  width: 100%;
+}

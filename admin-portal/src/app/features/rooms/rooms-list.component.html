@@ -1,0 +1,34 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Habitaciones</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div class="toolbar">
+      <input class="search" type="search" placeholder="Buscar…" [formControl]="search" />
+      @if (loading()) {
+        <span>Cargando…</span>
+      }
+      <span class="spacer"></span>
+      <a *appHasRole="['ADMIN', 'SUPER_ADMIN']" mat-flat-button color="primary" routerLink="new">
+        Nueva habitación
+      </a>
+    </div>
+    <table mat-table [dataSource]="rows()" class="fullw">
+      @for (col of displayedColumns; track col) {
+        <ng-container [matColumnDef]="col">
+          <th mat-header-cell *matHeaderCellDef>{{ col }}</th>
+          <td mat-cell *matCellDef="let row">{{ row[col] }}</td>
+        </ng-container>
+      }
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+    <mat-paginator
+      [length]="total()"
+      [pageIndex]="pageIndex()"
+      [pageSize]="pageSize()"
+      [pageSizeOptions]="[5, 10, 25]"
+      (page)="onPage($event)"
+    />
+  </mat-card-content>
+</mat-card>

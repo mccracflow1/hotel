@@ -1,0 +1,47 @@
+<div class="wrap">
+  <mat-card class="card">
+    <mat-card-header>
+      <mat-card-title>Portal de administración</mat-card-title>
+      <mat-card-subtitle>Iniciá sesión con tu cuenta</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Correo</mat-label>
+          <input matInput type="email" formControlName="email" autocomplete="username" />
+          @if (form.controls.email.touched && form.controls.email.invalid) {
+            <mat-error>Correo inválido</mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Contraseña</mat-label>
+          <input
+            matInput
+            type="password"
+            formControlName="password"
+            autocomplete="current-password"
+          />
+          @if (form.controls.password.touched && form.controls.password.invalid) {
+            <mat-error>Mínimo 8 caracteres</mat-error>
+          }
+        </mat-form-field>
+        @if (errorMessage(); as err) {
+          <p class="err">{{ err }}</p>
+        }
+        <button
+          mat-flat-button
+          color="primary"
+          class="full"
+          type="submit"
+          [disabled]="authenticating()"
+        >
+          @if (authenticating()) {
+            Ingresando…
+          } @else {
+            Ingresar
+          }
+        </button>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>
