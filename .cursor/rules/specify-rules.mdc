@@ -8,6 +8,8 @@ alwaysApply: true
 Auto-generated from all feature plans. Last updated: 2026-04-17
 
 ## Active Technologies
+- Node.js 20 LTS (Backend), Angular 17+ (Admin), HTML5/Tailwind (Landing) (005-payments-media-cms)
+- PostgreSQL 14+ (ACID compliant) (005-payments-media-cms)
 
 
 
@@ -27,6 +29,7 @@ tests/
 General: Follow standard conventions
 
 ## Recent Changes
+- 005-payments-media-cms: Added Node.js 20 LTS (Backend), Angular 17+ (Admin), HTML5/Tailwind (Landing)
 
 
 
