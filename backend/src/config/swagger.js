@@ -35,6 +35,44 @@ const swaggerDocument = {
         responses: { 200: { description: 'OK' } },
       },
     },
+    '/v1/public/reservations': {
+      post: {
+        summary: 'Create reservation (anonymous landing, idempotent)',
+        tags: ['Public'],
+        parameters: [
+          {
+            name: 'Idempotency-Key',
+            in: 'header',
+            required: true,
+            schema: { type: 'string', maxLength: 128 },
+          },
+        ],
+        responses: { 201: { description: 'Created' }, 400: { description: 'Validation' }, 429: { description: 'Rate limit' } },
+      },
+    },
+    '/v1/public/payments/create': {
+      post: {
+        summary: 'Start MercadoPago checkout (anonymous + payment_intent_token)',
+        tags: ['Public'],
+        parameters: [
+          {
+            name: 'Idempotency-Key',
+            in: 'header',
+            required: true,
+            schema: { type: 'string', maxLength: 128 },
+          },
+        ],
+        responses: { 201: { description: 'Created' }, 403: { description: 'Invalid token' } },
+      },
+    },
+    '/v1/plans/by-slug/{slug}': {
+      get: {
+        summary: 'Get active plan detail by slug (public)',
+        tags: ['Plans'],
+        parameters: [{ name: 'slug', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: { 200: { description: 'OK' }, 404: { description: 'Not found' } },
+      },
+    },
     '/v1/rooms': {
       get: {
         summary: 'List rooms (public or admin with Bearer)',

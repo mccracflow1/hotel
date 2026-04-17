@@ -11,6 +11,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(require('./middlewares/landing-cors').landingCorsMiddleware());
 
 // Medios locales: sirve `storage/public` (originals/, thumbnails/). Webhook MP usa JSON parseado
 // aquí arriba; la firma HMAC toma `data.id` de query o body según mp-webhook.verify.
@@ -66,6 +67,7 @@ app.use('/api/v1/reports', require('./modules/reports/reports.routes'));
 app.use('/api/v1/payments', require('./modules/payments/payments.routes'));
 app.use('/api/v1/media', require('./modules/media/media.routes'));
 app.use('/api/v1/public', require('./modules/public-catalog/public-catalog.routes'));
+app.use('/api/v1/public', require('./modules/public-booking/public-booking.routes'));
 app.use('/api/v1', require('./modules/cms/cms.routes'));
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
