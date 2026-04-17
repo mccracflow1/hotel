@@ -21,6 +21,12 @@ const createRoomSchema = Joi.object({
   cover_media_id: Joi.string().uuid().allow(null).optional(),
 });
 
+const linkRoomMediaSchema = Joi.object({
+  media_id: Joi.string().uuid().required(),
+  is_cover: Joi.boolean().optional(),
+  sort_order: Joi.number().integer().min(0).optional(),
+});
+
 const patchRoomSchema = Joi.object({
   name: Joi.string().min(1).max(100).optional(),
   slug: Joi.string().max(100).optional(),
@@ -41,5 +47,6 @@ const patchRoomSchema = Joi.object({
 module.exports = {
   createRoomSchema,
   patchRoomSchema,
+  linkRoomMediaSchema,
   ROOM_TYPES,
 };

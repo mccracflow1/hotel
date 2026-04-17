@@ -129,6 +129,25 @@ async function softDelete(trx, id) {
   return row;
 }
 
+async function linkRoomMedia(trx, roomId, mediaId, { is_cover = false, sort_order = 0 } = {}) {
+  await trx('room_media')
+    .insert({
+      room_id: roomId,
+      media_id: mediaId,
+      is_cover: !!is_cover,
+      sort_order: sort_order ?? 0,
+    })
+    .onConflict(['room_id', 'media_id'])
+    .merge({
+      is_cover: !!is_cover,
+      sort_order: sort_order ?? 0,
+    });
+}
+
+async function unlinkRoomMedia(trx, roomId, mediaId) {
+  return trx('room_media').where({ room_id: roomId, media_id: mediaId }).delete();
+}
+
 async function setRoomMedia(trx, roomId, mediaIds, coverMediaId) {
   await trx('room_media').where({ room_id: roomId }).delete();
   if (!mediaIds || mediaIds.length === 0) return;
@@ -159,6 +178,8 @@ module.exports = {
   updateRoom,
   softDelete,
   setRoomMedia,
+  linkRoomMedia,
+  unlinkRoomMedia,
   hydrateMedia,
   mapRoomRow,
 };

@@ -12,6 +12,9 @@ router.post('/', authGuard, requireRoles('ADMIN', 'SUPER_ADMIN'), roomsControlle
 
 router.get('/:id', optionalAuth, roomsController.getRoomById);
 
+router.post('/:id/media', authGuard, requireRoles('ADMIN', 'SUPER_ADMIN'), roomsController.postRoomMedia);
+router.delete('/:id/media/:mediaId', authGuard, requireRoles('ADMIN', 'SUPER_ADMIN'), roomsController.deleteRoomMedia);
+
 router.patch('/:id', authGuard, requireRoles('ADMIN', 'SUPER_ADMIN'), roomsController.patchRoom);
 
 router.delete('/:id', authGuard, requireRoles('ADMIN', 'SUPER_ADMIN'), roomsController.deleteRoom);
