@@ -18,9 +18,9 @@
 
 ## R-002 — Endpoints públicos para habitaciones/planes en la landing
 
-**Decision**: Antes de implementar la landing, **auditar** `rooms.routes.js` y `plans.routes.js` para confirmar si `GET` lista ya es público (`optionalAuth` o sin guard). Si no lo es, exponer **`GET /api/v1/public/rooms`** y **`GET /api/v1/public/plans`** (o nombre único) que devuelvan **solo** campos de marketing (nombre, capacidad, precio base, foto, slug) sin datos sensibles.
+**Decision (auditoría 2026-04-17)**: `GET /api/v1/rooms` y `GET /api/v1/plans` ya usan **`optionalAuth`** y, sin rol de gestión, delegan en **`listPublic()`** (campos acotados a catálogo/marketing). Se añadieron alias explícitos **`GET /api/v1/public/rooms`** y **`GET /api/v1/public/plans`** (misma respuesta) para que la landing y la documentación no dependan de rutas compartidas con mutaciones admin.
 
-**Rationale**: La constitución exige API-first; la landing no tiene JWT de visitante.
+**Rationale**: La constitución exige API-first; la landing no tiene JWT de visitante; el prefijo `/public` deja claro el contrato CORS/cache.
 
 **Alternatives considered**:
 
@@ -61,3 +61,15 @@
 **Alternatives considered**:
 
 - Separar microservicio de secrets — YAGNI para S8.
+
+---
+
+## R-006 — Auditoría e idempotencia en CMS, medios y `business_config`
+
+**Decision**: (1) Migración **`018_audit_triggers_cms_media_business.js`**: triggers `log_changes()` en `media_library`, `site_content`, `faqs`, `business_config`. (2) Todas las transacciones Knex que escriben en esas tablas (y en `users` para alta/edición) llaman **`setAuditUserOnTrx`** al inicio. (3) Idempotencia **estricta** (`Idempotency-Key` obligatorio) en `PUT /site-content/:section`, `PUT /business-config` y `POST /media/upload`.
+
+**Rationale**: Cierra brecha constitución §IV y §II respecto al análisis de consistencia spec/plan/tareas.
+
+**Alternatives considered**:
+
+- Insertar `audit_logs` solo desde servicios Node — duplica lógica frente a triggers ya usadas en tablas operativas.

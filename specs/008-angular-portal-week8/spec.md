@@ -34,6 +34,7 @@ El trabajo se alinea al desglose diario de la **Semana 8** del `plan_trabajo.md`
 - **Gestor de preguntas frecuentes**: listado **ordenable**, altas/edición/baja lógica con **activación** explícita.
 - **Previsualización** del impacto visual del contenido en el sitio público **antes de publicar** cambios relevantes (al menos para bloques principales del hero y contacto).
 - **Galería general del hotel**: cuadrícula con **reordenamiento** y **carga múltiple** de imágenes vinculadas a medios.
+- Bloque editorial **about / Quiénes somos** (`site_content`, sección `about`) alineado al maestro cuando el modelo de contenido lo reserve.
 
 ### C. Usuarios, perfil y configuración (portal administrativo)
 
@@ -201,7 +202,7 @@ El trabajo se alinea al desglose diario de la **Semana 8** del `plan_trabajo.md`
 ### No funcionales y seguridad (mínimos de la semana)
 
 - **FR-028**: Las mutaciones de contenido, usuarios y configuración **deben** quedar sujetas a **autenticación** y **autorización** según matriz.
-- **FR-029**: Las acciones destructivas (borrado de medios, desactivación de usuarios) **deben** requerir **confirmación explícita** del operador.
+- **FR-029**: Las acciones destructivas (borrado de medios, desactivación de usuarios) **deben** requerir **confirmación explícita** del operador en **el mismo nivel de severidad** en todos los casos: diálogo modal con texto que resume el impacto (p. ej. nombre del recurso o consecuencia de acceso), no bastan toggles silenciosos ni guardados implícitos.
 - **FR-030**: Los textos de error **deben** ser comprensibles para personal no técnico (sin códigos crudos como única información).
 
 ### Key Entities

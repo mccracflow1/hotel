@@ -13,9 +13,16 @@ Esta entrega completa el **portal de administración** con **CMS de medios**, **
 
 - **Admin (`admin-portal/`)**: nuevos módulos lazy bajo `/admin/cms`, `/admin/users`, `/admin/settings`, `/admin/profile` (perfil puede reutilizar ruta existente o crearse), Angular Material + CDK (drag-drop FAQs, upload con progreso), `HttpClient` contra `/api/v1`, guards alineados a matriz §6.
 - **Backend (`backend/`)**: ya existen módulos `media`, `cms`, `users`, `business-config`; el plan detalla **ampliaciones** (video, rename, uso-before-delete, PATCH usuario estado si falta, multipart) y pruebas de contrato.
-- **Landing (`landing-page/` o carpeta acordada)**: HTML + Tailwind (constitución) — **no existe** carpeta hoy; se crea estructura mínima con fetch a `GET /api/v1/cms/site-content/public` y endpoints públicos de catálogo según contrato.
+- **Landing (`landing-page/` o carpeta acordada)**: HTML + Tailwind (constitución) — **no existe** carpeta hoy; se crea estructura mínima con fetch a `GET /api/v1/site-content/public` y endpoints públicos de catálogo según contrato.
+- **Rutas admin canónicas (UX)**: la biblioteca de medios vive bajo **`/admin/cms/media`** (hijo del shell CMS en `/admin/cms`), sin duplicar otra ruta raíz salvo decisión explícita en este `plan.md`.
 
 ## Technical Context
+
+**Language/Version**: Node.js 20 LTS (backend), Angular 20+ standalone (admin-portal), HTML5 + Tailwind CDN (landing-page)  
+**Primary dependencies**: Express 5, Knex, PostgreSQL 14+, Angular Material, RxJS, Sharp/S3 (media pipeline)  
+**Storage**: PostgreSQL (fuente de verdad), S3 o almacenamiento local para blobs de medios  
+**Testing**: Tests de integración en backend para CMS/media; tests de componente/servicio en admin donde aplique  
+**Target platform**: Windows dev + despliegue Railway/Vercel/Netlify según maestro  
 
 | Aspecto | Valor |
 |---------|--------|
@@ -42,9 +49,9 @@ Esta entrega completa el **portal de administración** con **CMS de medios**, **
 | Principio | Evaluación Semana 8 |
 |-----------|---------------------|
 | **I. API-First** | PASS — Landing y portal solo consumen API; sin acceso directo a BD desde frontends. |
-| **II. Idempotency** | PASS condicional — Subidas y mutaciones CMS: usar `Idempotency-Key` donde haya riesgo de doble submit (p. ej. guardado masivo de `site_content`); usuarios/create según patrón del proyecto. Pagos/reservas no son foco S8. |
+| **II. Idempotency** | PASS — API: `Idempotency-Key` obligatorio en `PUT /site-content/:section`, `PUT /business-config` y `POST /media/upload` (middleware estricto). Cliente admin debe enviar la cabecera al implementar los servicios HTTP (véase `contracts/README.md`). |
 | **III. Snapshots** | N/A directo — Cambios de contenido no reescriben reservas; validar que edición de plan no rompa snapshots (ya regla S7). |
-| **IV. RBAC + auditoría** | PASS obligatorio — Rutas `media` y `cms` ya restringidas a `ADMIN`/`SUPER_ADMIN`; credenciales MP solo `SUPER_ADMIN`; audit `user_id` en mutaciones CMS/config. |
+| **IV. RBAC + auditoría** | PASS — Rutas `media` y `cms` restringidas a `ADMIN`/`SUPER_ADMIN`; credenciales MP solo `SUPER_ADMIN`; migración `018_*` + `setAuditUserOnTrx` en transacciones que mutan `site_content`, `faqs`, `business_config`, `media_library` y `users`. |
 | **V. MCP** | N/A Semana 8 |
 | **VI. Angular** | PASS — Nuevos módulos standalone, signals, OnPush; lógica de negocio en API. |
 
@@ -120,7 +127,7 @@ landing-page/                 # NUEVO — Días 39–40
 
 **Backend**
 
-- `PUT /cms/site-content/:section` ya existe — validar `putSectionSchema` cubre `hero`, `contact`, `gallery`, `about` según `cms.schema.js`.
+- `PUT /api/v1/site-content/:section` ya existe — validar `putSectionSchema` cubre `hero`, `contact`, `gallery`, `about` según `cms.schema.js`.
 - `gallery` como `list_json` de `media_id` — orden persistido en JSON o tabla puente si el repo ya migró.
 - FAQs: `PUT /cms/faqs/reorder` con body `{ ids: UUID[] }` — UI CDK drag-drop → llamar endpoint.
 
@@ -163,7 +170,7 @@ landing-page/                 # NUEVO — Días 39–40
 **Landing**
 
 - Crear proyecto `landing-page/` con `index.html` secciones: `#hero`, `#services`, `#plans`, `#gallery`, `#faq`, `#map`, `footer`.
-- `fetch(API_URL + '/cms/site-content/public')` → mapear keys del bundle a DOM.
+- `fetch(API_URL + '/site-content/public')` → mapear keys del bundle a DOM.
 - `fetch` habitaciones activas: usar endpoint público existente (`GET /rooms` según maestro — verificar si requiere auth; si requiere auth, acordar **endpoint público** `GET /public/rooms` mínimo para S8 o filtrar en bundle CMS — documentar en `research.md`).
 - Planes: `GET /plans` optionalAuth en backend — usable públicamente según rutas actuales.
 - SEO: actualizar `<title>`, `<meta name="description">`, OG tags desde `site_content` o `business_config.hotel_name`.
@@ -214,6 +221,17 @@ landing-page/                 # NUEVO — Días 39–40
 ## Post-Phase 1 — Agent context
 
 Ejecutar `update-agent-context.ps1` tras estabilizar este `plan.md` para refrescar `.cursor/rules/specify-rules.mdc`.
+
+## Constitution Check (post–Phase 1 design)
+
+| Gate | Estado |
+|------|--------|
+| API-First | PASS |
+| Idempotency en operaciones críticas duplicables | PASS condicional (upload masivo / guardado secciones) |
+| Snapshots reservas | N/A cambio directo S8 |
+| RBAC + auditoría en mutaciones CMS/config/users/media | PASS (revisar en implementación) |
+| MCP | N/A |
+| Angular standalone + signals + OnPush | PASS |
 
 ## Handoff
 
