@@ -2,6 +2,22 @@
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.24.
 
+## Semana 7 — dependencias de exportación
+
+Para listados y reportes (CSV, Excel, PDF) el portal usa:
+
+- `exceljs`
+- `jspdf` y `jspdf-autotable`
+- `@angular/cdk` (drag-and-drop en formulario de planes; ya alineado con Material)
+
+Instalación (si clonás sin `node_modules`):
+
+```bash
+npm install
+```
+
+Detalle de rutas y smoke por rol: `specs/007-angular-portal-week7/quickstart.md`.
+
 ## Development server
 
 To start a local development server, run:

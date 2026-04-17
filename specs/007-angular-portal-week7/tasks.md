@@ -88,7 +88,7 @@ Phase 2 Foundational (idempotencia, export, navegación)
 - [ ] T011 Actualizar `admin-portal/src/app/core/layout/nav.config.ts` con ítems y `roles` según `specs/007-angular-portal-week7/contracts/README.md`
 - [ ] T012 Asegurar `roleGuard` en rutas `plans` y `optional-activities` solo `ADMIN`/`SUPER_ADMIN` en `admin-portal/src/app/app.routes.ts`
 - [ ] T013 Asegurar ruta `reservations` accesible a roles de lectura según matriz en `admin-portal/src/app/app.routes.ts`
-- [ ] T014 [P] Verificar comandos install y rutas S7 documentados en `specs/007-angular-portal-week7/quickstart.md`
+- [x] T014 [P] Verificar comandos install y rutas S7 documentados en `specs/007-angular-portal-week7/quickstart.md`
 
 ---
 
@@ -124,22 +124,22 @@ Phase 2 Foundational (idempotencia, export, navegación)
 
 **Goal**: PATCH status, PUT fechas, DELETE cancel, POST opcional, POST crear, pago si rol API, idempotencia, refresco de detalle tras mutación.
 
-- [ ] T036 [US2] Implementar `createReservation()` con cabecera `Idempotency-Key` en `admin-portal/src/app/features/reservations/reservations.service.ts`
-- [ ] T037 [US2] Implementar `updateReservationDates()` con cabecera `Idempotency-Key` en `admin-portal/src/app/features/reservations/reservations.service.ts`
-- [ ] T038 [US2] Implementar `cancelReservation()` con cabecera `Idempotency-Key` en `admin-portal/src/app/features/reservations/reservations.service.ts`
-- [ ] T039 [US2] Implementar `patchReservationStatus()` en `admin-portal/src/app/features/reservations/reservations.service.ts`
-- [ ] T040 [US2] Implementar `addOptionalToReservation()` con cabecera `Idempotency-Key` en `admin-portal/src/app/features/reservations/reservations.service.ts`
-- [ ] T041 [US2] Crear `ReservationActionsComponent` o integrar acciones en `admin-portal/src/app/features/reservations/reservation-detail-drawer.component.ts`
-- [ ] T042 [US2] Modal confirmación cancelación leyendo `getPolicy` en `admin-portal/src/app/features/reservations/reservation-cancel-dialog.component.ts`
-- [ ] T043 [US2] Form cambio de fechas con validación en `admin-portal/src/app/features/reservations/reservation-dates-form.component.ts`
-- [ ] T044 [US2] Selector opcionales disponibles + `POST /reservations/:id/optional-activities` en `admin-portal/src/app/features/reservations/reservation-add-optional.component.ts`
-- [ ] T045 [US2] Crear `ReservationManualCreateComponent` en `admin-portal/src/app/features/reservations/reservation-manual-create.component.ts` y ruta `new` en `reservations.routes.ts`
-- [ ] T046 [US2] Ocultar acciones mutadoras para `VIEWER` con `*appHasRole` en templates de `admin-portal/src/app/features/reservations/`
-- [ ] T047 [US2] Crear `PaymentsService` en `admin-portal/src/app/features/payments/payments.service.ts` con `createCheckout(reservationId)` → `POST /payments/create` enviando cabecera `Idempotency-Key` cuando el contrato lo exija, si el rol y el backend lo permiten
-- [ ] T048 [US2] Botón “Generar link de pago” visible solo para roles permitidos por contrato en `admin-portal/src/app/features/reservations/reservation-detail-drawer.component.html`
-- [ ] T049 [US2] Mostrar URL copiable con `Clipboard` API y `ToastService` en `admin-portal/src/app/features/reservations/reservation-detail-drawer.component.ts`
-- [ ] T050 [US2] Tras mutación exitosa, refrescar detalle o re-fetch en `admin-portal/src/app/features/reservations/reservation-detail-drawer.component.ts` (alineado a SC-003)
-- [ ] T051 [P] [US2] Tests de cabecera idempotencia en `admin-portal/src/app/features/reservations/reservations.service.spec.ts`
+- [x] T036 [US2] Implementar `createReservation()` con cabecera `Idempotency-Key` en `admin-portal/src/app/features/reservations/reservations.service.ts`
+- [x] T037 [US2] Implementar `updateReservationDates()` con cabecera `Idempotency-Key` en `admin-portal/src/app/features/reservations/reservations.service.ts`
+- [x] T038 [US2] Implementar `cancelReservation()` con cabecera `Idempotency-Key` en `admin-portal/src/app/features/reservations/reservations.service.ts`
+- [x] T039 [US2] Implementar `patchReservationStatus()` en `admin-portal/src/app/features/reservations/reservations.service.ts`
+- [x] T040 [US2] Implementar `addOptionalToReservation()` con cabecera `Idempotency-Key` en `admin-portal/src/app/features/reservations/reservations.service.ts`
+- [x] T041 [US2] Crear `ReservationActionsComponent` o integrar acciones en `admin-portal/src/app/features/reservations/reservation-detail-drawer.component.ts`
+- [x] T042 [US2] Modal confirmación cancelación leyendo `getPolicy` en `admin-portal/src/app/features/reservations/reservation-cancel-dialog.component.ts`
+- [x] T043 [US2] Form cambio de fechas con validación en `admin-portal/src/app/features/reservations/reservation-dates-form.component.ts`
+- [x] T044 [US2] Selector opcionales disponibles + `POST /reservations/:id/optional-activities` en `admin-portal/src/app/features/reservations/reservation-add-optional.component.ts`
+- [x] T045 [US2] Crear `ReservationManualCreateComponent` en `admin-portal/src/app/features/reservations/reservation-manual-create.component.ts` y ruta `new` en `reservations.routes.ts`
+- [x] T046 [US2] Ocultar acciones mutadoras para `VIEWER` con `*appHasRole` en templates de `admin-portal/src/app/features/reservations/`
+- [x] T047 [US2] Crear `PaymentsService` en `admin-portal/src/app/features/payments/payments.service.ts` con `createCheckout(reservationId)` → `POST /payments/create` enviando cabecera `Idempotency-Key` cuando el contrato lo exija, si el rol y el backend lo permiten
+- [x] T048 [US2] Botón “Generar link de pago” visible solo para roles permitidos por contrato en `admin-portal/src/app/features/reservations/reservation-detail-drawer.component.html`
+- [x] T049 [US2] Mostrar URL copiable con `Clipboard` API y `ToastService` en `admin-portal/src/app/features/reservations/reservation-detail-drawer.component.ts`
+- [x] T050 [US2] Tras mutación exitosa, refrescar detalle o re-fetch en `admin-portal/src/app/features/reservations/reservation-detail-drawer.component.ts` (alineado a SC-003)
+- [x] T051 [P] [US2] Tests de cabecera idempotencia en `admin-portal/src/app/features/reservations/reservations.service.spec.ts`
 
 ---
 
@@ -147,17 +147,17 @@ Phase 2 Foundational (idempotencia, export, navegación)
 
 **Goal**: CRUD plan, medios, reorder, delete-impact, clone.
 
-- [ ] T052 [US3] Crear `admin-portal/src/app/features/plans/plans.service.ts` (list, get, create, patch, clone, reorder, deleteActivity, deleteImpact, media, optional-links según contrato)
-- [ ] T053 [US3] Crear `admin-portal/src/app/features/plans/plans.routes.ts` (`''`, `new`, `:id/edit`)
-- [ ] T054 [US3] Registrar lazy `plans` con `roleGuard` en `admin-portal/src/app/app.routes.ts`
-- [ ] T055 [US3] Crear `PlansListComponent` OnPush en `admin-portal/src/app/features/plans/plans-list.component.ts`
-- [ ] T056 [US3] Crear `PlanFormComponent` en `admin-portal/src/app/features/plans/plan-form.component.ts` con subsecciones Material stepper o tabs
-- [ ] T057 [US3] Integrar subida portada/galería vía `POST /plans/:id/media` en `admin-portal/src/app/features/plans/plan-media.helper.ts`
-- [ ] T058 [US3] Lista actividades base con CDK `DragDropModule` en `admin-portal/src/app/features/plans/plan-activities.component.ts`
-- [ ] T059 [US3] Llamar `POST /plans/:id/activities/reorder` al soltar en `admin-portal/src/app/features/plans/plan-activities.component.ts`
-- [ ] T060 [US3] Antes de `DELETE` actividad, llamar `GET .../delete-impact` y mostrar `ConfirmDialogComponent` en `admin-portal/src/app/features/plans/plan-activities.component.ts`
-- [ ] T061 [US3] Acción duplicar plan `POST /plans/:id/clone` con confirmación en `admin-portal/src/app/features/plans/plans-list.component.ts`
-- [ ] T062 [P] [US3] Tests básicos `admin-portal/src/app/features/plans/plans.service.spec.ts`
+- [x] T052 [US3] Crear `admin-portal/src/app/features/plans/plans.service.ts` (list, get, create, patch, clone, reorder, deleteActivity, deleteImpact, media, optional-links según contrato)
+- [x] T053 [US3] Crear `admin-portal/src/app/features/plans/plans.routes.ts` (`''`, `new`, `:id/edit`)
+- [x] T054 [US3] Registrar lazy `plans` con `roleGuard` en `admin-portal/src/app/app.routes.ts`
+- [x] T055 [US3] Crear `PlansListComponent` OnPush en `admin-portal/src/app/features/plans/plans-list.component.ts`
+- [x] T056 [US3] Crear `PlanFormComponent` en `admin-portal/src/app/features/plans/plan-form.component.ts` con subsecciones Material stepper o tabs
+- [x] T057 [US3] Integrar subida portada/galería vía `POST /plans/:id/media` en `admin-portal/src/app/features/plans/plan-media.helper.ts`
+- [x] T058 [US3] Lista actividades base con CDK `DragDropModule` en `admin-portal/src/app/features/plans/plan-activities.component.ts`
+- [x] T059 [US3] Llamar `POST /plans/:id/activities/reorder` al soltar en `admin-portal/src/app/features/plans/plan-activities.component.ts`
+- [x] T060 [US3] Antes de `DELETE` actividad, llamar `GET .../delete-impact` y mostrar `ConfirmDialogComponent` en `admin-portal/src/app/features/plans/plan-activities.component.ts`
+- [x] T061 [US3] Acción duplicar plan `POST /plans/:id/clone` con confirmación en `admin-portal/src/app/features/plans/plans-list.component.ts`
+- [x] T062 [P] [US3] Tests básicos `admin-portal/src/app/features/plans/plans.service.spec.ts`
 
 ---
 
@@ -165,17 +165,17 @@ Phase 2 Foundational (idempotencia, export, navegación)
 
 **Goal**: CRUD `/optional-activities`, links en plan, **desvinculación**, pre-selección, preview precio, validación negocio.
 
-- [ ] T063 [US4] Crear `admin-portal/src/app/features/optional-activities/optional-activities.service.ts`
-- [ ] T064 [US4] Crear rutas `admin-portal/src/app/features/optional-activities/optional-activities.routes.ts`
-- [ ] T065 [US4] Registrar lazy en `admin-portal/src/app/app.routes.ts`
-- [ ] T066 [US4] Crear `OptionalActivitiesListComponent` en `admin-portal/src/app/features/optional-activities/optional-activities-list.component.ts`
-- [ ] T067 [US4] Crear formulario alta/edición opcional en `admin-portal/src/app/features/optional-activities/optional-activity-form.component.ts`
-- [ ] T068 [US4] En `PlanFormComponent`, sección multi-select hacia `POST /plans/:id/optional-links` en `admin-portal/src/app/features/plans/plan-optionals-section.component.ts`
-- [ ] T069 [US4] Toggle pre-seleccionada mapeando campos del API en `admin-portal/src/app/features/plans/plan-optionals-section.component.ts`
-- [ ] T070 [US4] Vista previa precio total (computed desde respuestas API) en `admin-portal/src/app/features/plans/plan-price-preview.component.ts`
-- [ ] T071 [US4] Implementar `removePlanOptionalLink(planId, optionalId)` con `DELETE /plans/:id/optional-links/:optionalId` en `admin-portal/src/app/features/plans/plans.service.ts`
-- [ ] T072 [US4] Acción **desvincular** opcional del plan con confirmación y manejo de error de negocio en `admin-portal/src/app/features/plans/plan-optionals-section.component.ts`
-- [ ] T073 [US4] Manejar error de negocio al desactivar opcional con reservas futuras en `admin-portal/src/app/features/optional-activities/optional-activities-list.component.ts`
+- [x] T063 [US4] Crear `admin-portal/src/app/features/optional-activities/optional-activities.service.ts`
+- [x] T064 [US4] Crear rutas `admin-portal/src/app/features/optional-activities/optional-activities.routes.ts`
+- [x] T065 [US4] Registrar lazy en `admin-portal/src/app/app.routes.ts`
+- [x] T066 [US4] Crear `OptionalActivitiesListComponent` en `admin-portal/src/app/features/optional-activities/optional-activities-list.component.ts`
+- [x] T067 [US4] Crear formulario alta/edición opcional en `admin-portal/src/app/features/optional-activities/optional-activity-form.component.ts`
+- [x] T068 [US4] En `PlanFormComponent`, sección multi-select hacia `POST /plans/:id/optional-links` en `admin-portal/src/app/features/plans/plan-optionals-section.component.ts`
+- [x] T069 [US4] Toggle pre-seleccionada mapeando campos del API en `admin-portal/src/app/features/plans/plan-optionals-section.component.ts`
+- [x] T070 [US4] Vista previa precio total (computed desde respuestas API) en `admin-portal/src/app/features/plans/plan-price-preview.component.ts`
+- [x] T071 [US4] Implementar `removePlanOptionalLink(planId, optionalId)` con `DELETE /plans/:id/optional-links/:optionalId` en `admin-portal/src/app/features/plans/plans.service.ts`
+- [x] T072 [US4] Acción **desvincular** opcional del plan con confirmación y manejo de error de negocio en `admin-portal/src/app/features/plans/plan-optionals-section.component.ts`
+- [x] T073 [US4] Manejar error de negocio al desactivar opcional con reservas futuras en `admin-portal/src/app/features/optional-activities/optional-activities-list.component.ts`
 
 ---
 
@@ -183,33 +183,33 @@ Phase 2 Foundational (idempotencia, export, navegación)
 
 **Goal**: Ítems (CRUD UI), alertas, movimientos con idempotencia, **historial**; proveedores; reportes con charts + export.
 
-- [ ] T074 [US5] Crear `admin-portal/src/app/features/inventory/inventory.service.ts` (items CRUD, movements list/create, alerts)
-- [ ] T075 [US5] Crear `admin-portal/src/app/features/suppliers/suppliers.service.ts` (CRUD según `backend/src/modules/suppliers/suppliers.routes.js`)
-- [ ] T076 [US5] Crear rutas lazy `admin-portal/src/app/features/inventory/inventory.routes.ts` (ítems, movimientos, historial, sub-ruta o feature `suppliers` según UX)
-- [ ] T077 [US5] Registrar rutas inventario/suppliers en `admin-portal/src/app/app.routes.ts`
-- [ ] T078 [US5] Crear `InventoryListComponent` con badge alertas en `admin-portal/src/app/features/inventory/inventory-list.component.ts`
-- [ ] T079 [US5] Crear `InventoryItemFormComponent` (diálogo o ruta) para alta/edición de ítem en `admin-portal/src/app/features/inventory/inventory-item-form.component.ts`
-- [ ] T080 [US5] Crear `SuppliersListComponent` y formulario proveedor en `admin-portal/src/app/features/suppliers/suppliers-list.component.ts`
-- [ ] T081 [US5] Crear `InventoryMovementFormComponent` con `Idempotency-Key` en `admin-portal/src/app/features/inventory/inventory-movement-form.component.ts`
-- [ ] T082 [US5] Crear `InventoryMovementsHistoryComponent` listando `GET` de movimientos en `admin-portal/src/app/features/inventory/inventory-movements-history.component.ts`
-- [ ] T083 [US5] Ocultar formulario movimiento a `VIEWER` en `admin-portal/src/app/features/inventory/inventory-movement-form.component.html`
-- [ ] T084 [US5] Crear `admin-portal/src/app/features/reports/reports.service.ts` envolviendo endpoints `/reports/*`
-- [ ] T085 [US5] Crear `ReportsPageComponent` OnPush en `admin-portal/src/app/features/reports/reports-page.component.ts`
-- [ ] T086 [US5] `DateRangePicker` (Material o dos datepickers) en `admin-portal/src/app/features/reports/reports-page.component.html`
-- [ ] T087 [US5] Gráfico ocupación apilada Chart.js en `admin-portal/src/app/features/reports/occupancy-stacked-chart.component.ts`
-- [ ] T088 [US5] Gráfico ingresos tipo pie en `admin-portal/src/app/features/reports/revenue-pie-chart.component.ts`
-- [ ] T089 [US5] Sección “planes performance” con degradación si falta agregado en `admin-portal/src/app/features/reports/plan-performance-section.component.ts`
-- [ ] T090 [US5] Export Excel/PDF de vista reporte usando helpers en `admin-portal/src/app/features/reports/reports-page.component.ts`
-- [ ] T091 [P] [US5] Tests `admin-portal/src/app/features/inventory/inventory.service.spec.ts`
+- [x] T074 [US5] Crear `admin-portal/src/app/features/inventory/inventory.service.ts` (items CRUD, movements list/create, alerts)
+- [x] T075 [US5] Crear `admin-portal/src/app/features/suppliers/suppliers.service.ts` (CRUD según `backend/src/modules/suppliers/suppliers.routes.js`)
+- [x] T076 [US5] Crear rutas lazy `admin-portal/src/app/features/inventory/inventory.routes.ts` (ítems, movimientos, historial, sub-ruta o feature `suppliers` según UX)
+- [x] T077 [US5] Registrar rutas inventario/suppliers en `admin-portal/src/app/app.routes.ts`
+- [x] T078 [US5] Crear `InventoryListComponent` con badge alertas en `admin-portal/src/app/features/inventory/inventory-list.component.ts`
+- [x] T079 [US5] Crear `InventoryItemFormComponent` (diálogo o ruta) para alta/edición de ítem en `admin-portal/src/app/features/inventory/inventory-item-form.component.ts`
+- [x] T080 [US5] Crear `SuppliersListComponent` y formulario proveedor en `admin-portal/src/app/features/suppliers/suppliers-list.component.ts`
+- [x] T081 [US5] Crear `InventoryMovementFormComponent` con `Idempotency-Key` en `admin-portal/src/app/features/inventory/inventory-movement-form.component.ts`
+- [x] T082 [US5] Crear `InventoryMovementsHistoryComponent` listando `GET` de movimientos en `admin-portal/src/app/features/inventory/inventory-movements-history.component.ts`
+- [x] T083 [US5] Ocultar formulario movimiento a `VIEWER` en `admin-portal/src/app/features/inventory/inventory-movement-form.component.html`
+- [x] T084 [US5] Crear `admin-portal/src/app/features/reports/reports.service.ts` envolviendo endpoints `/reports/*`
+- [x] T085 [US5] Crear `ReportsPageComponent` OnPush en `admin-portal/src/app/features/reports/reports-page.component.ts`
+- [x] T086 [US5] `DateRangePicker` (Material o dos datepickers) en `admin-portal/src/app/features/reports/reports-page.component.html`
+- [x] T087 [US5] Gráfico ocupación apilada Chart.js en `admin-portal/src/app/features/reports/occupancy-stacked-chart.component.ts`
+- [x] T088 [US5] Gráfico ingresos tipo pie en `admin-portal/src/app/features/reports/revenue-pie-chart.component.ts`
+- [x] T089 [US5] Sección “planes performance” con degradación si falta agregado en `admin-portal/src/app/features/reports/plan-performance-section.component.ts`
+- [x] T090 [US5] Export Excel/PDF de vista reporte usando helpers en `admin-portal/src/app/features/reports/reports-page.component.ts`
+- [x] T091 [P] [US5] Tests `admin-portal/src/app/features/inventory/inventory.service.spec.ts`
 
 ---
 
 ## Phase 8: Polish & cross-cutting
 
-- [ ] T092 Añadir `aria-label` a iconos de acción en `admin-portal/src/app/features/reservations/`
-- [ ] T093 Revisar budgets `maximumWarning` en `admin-portal/angular.json` tras nuevas libs
-- [ ] T094 Actualizar `specs/007-angular-portal-week7/quickstart.md` con rutas finales y smoke por rol (incl. SC-001/SC-002 manuales)
-- [ ] T095 [P] Eliminar `console.log` en `admin-portal/src/app/features/reservations/**` y `plans/**`
+- [x] T092 Añadir `aria-label` a iconos de acción en `admin-portal/src/app/features/reservations/`
+- [x] T093 Revisar budgets `maximumWarning` en `admin-portal/angular.json` tras nuevas libs
+- [x] T094 Actualizar `specs/007-angular-portal-week7/quickstart.md` con rutas finales y smoke por rol (incl. SC-001/SC-002 manuales)
+- [x] T095 [P] Eliminar `console.log` en `admin-portal/src/app/features/reservations/**` y `plans/**`
 
 ---
 

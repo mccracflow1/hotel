@@ -8,6 +8,8 @@
 
 ## 1. Instalar dependencias nuevas (S7)
 
+Si el `package.json` del repo ya declara las libs de S7, alcanza con `npm install` en `admin-portal/`. Solo si faltan entradas:
+
 ```powershell
 Set-Location e:\Proyectos\multi_stage\hotel\admin-portal
 npm install exceljs jspdf jspdf-autotable @angular/cdk --save
@@ -32,6 +34,11 @@ Tras implementar, actualizar `nav.config.ts` para que el menú refleje §6.
 1. **VIEWER**: abrir reservas (lista + detalle + export si habilitado), reportes; confirmar que **no** aparecen acciones mutadoras ni POST movimientos.
 2. **BUSINESS**: confirmar cancelación/ fechas en reserva permitidas; inventario movimiento; **no** debe ver CRUD planes.
 3. **ADMIN**: CRUD plan, opcionales, clonar plan, enlace de pago (`POST /payments/create` si rol coincide).
+
+### SC-001 / SC-002 (manual)
+
+- **SC-001**: exportaciones pesadas — en reservas, CSV/Excel con muchos registros debe mostrarse feedback de progreso o mensaje informativo (no bloqueo silencioso).
+- **SC-002**: matriz de roles — `VIEWER` no completa mutaciones en reservas ni movimientos de inventario; planes/opcionales solo `ADMIN`/`SUPER_ADMIN` (rutas + `*appHasRole`).
 
 ## Referencias
 
