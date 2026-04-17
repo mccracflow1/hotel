@@ -17,16 +17,17 @@ npm run dev
 
 Verificar `http://localhost:3000/api/v1/health`.
 
-## 2. Crear y levantar `admin-portal/` (tras implementar T001–T020 del tasks.md)
+## 2. Levantar `admin-portal/`
+
+El proyecto ya está en `admin-portal/` en la raíz del monorepo. El `npm start` usa `proxy.conf.json` para enrutar `/api` → `http://localhost:3000`, así que **`apiUrl` puede quedar en `/api/v1`** (ver `src/environments/environment*.ts`).
 
 ```powershell
-Set-Location e:\Proyectos\multi_stage\hotel
-cd admin-portal
+Set-Location e:\Proyectos\multi_stage\hotel\admin-portal
 npm install
 npm start
 ```
 
-Configurar `src/environments/environment.development.ts`:
+Si preferís llamar al API por URL absoluta (sin proxy), configurá `apiUrl` en `src/environments/environment.development.ts`, por ejemplo:
 
 ```ts
 export const environment = {
