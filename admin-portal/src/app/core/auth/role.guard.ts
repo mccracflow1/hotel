@@ -8,8 +8,11 @@ export const roleGuard: CanActivateFn = (route) => {
   const router = inject(Router);
   const allowed = route.data['roles'] as UserRole[] | undefined;
   const role = auth.user()?.role;
-  if (!role || !allowed?.length) {
-    return router.parseUrl('/admin/forbidden');
+  if (!allowed?.length) {
+    return true;
+  }
+  if (!role) {
+    return router.parseUrl('/admin/login');
   }
   if (allowed.includes(role)) {
     return true;
