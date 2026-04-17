@@ -60,11 +60,12 @@ async function listAdmin(query) {
 }
 
 function mapRoomRow(row) {
-  const { cover_media_url, ...rest } = row;
+  const { cover_media_url, cover_media_id, ...rest } = row;
   return {
     ...rest,
     base_price: rest.base_price != null ? Number(rest.base_price) : rest.base_price,
     cover_media_url: cover_media_url || null,
+    cover_media_id: cover_media_id || null,
   };
 }
 
@@ -73,9 +74,13 @@ async function hydrateMedia(row) {
     .join('media_library as ml', 'ml.id', 'rm.media_id')
     .where('rm.room_id', row.id)
     .where('rm.is_cover', true)
-    .select('ml.original_url')
+    .select('ml.original_url', 'ml.id as cover_media_id')
     .first();
-  return mapRoomRow({ ...row, cover_media_url: cover?.original_url });
+  return mapRoomRow({
+    ...row,
+    cover_media_url: cover?.original_url ?? null,
+    cover_media_id: cover?.cover_media_id ?? null,
+  });
 }
 
 async function insertRoom(trx, payload) {
