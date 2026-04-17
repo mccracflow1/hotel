@@ -1,5 +1,13 @@
 'use strict';
 
+/**
+ * Claves canónicas por sección (maestro §17 / CONTEXTO):
+ * - hero: title, subtitle, cta_text, background_image_url, …
+ * - contact: phone, whatsapp, email, address, maps_embed_url, redes…
+ * - about: title, body, image_url, …
+ * - gallery: images (list_json de UUIDs o objetos resueltos en público)
+ * La API acepta cualquier `key` acotada por longitud; el admin guía al operador con formularios por sección.
+ */
 const Joi = require('joi');
 
 const siteContentEntrySchema = Joi.object({

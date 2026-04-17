@@ -3,6 +3,7 @@
 const db = require('../../config/database');
 const repo = require('./cms.repository');
 const { NotFoundError, ValidationError } = require('../../middlewares/error-handler');
+const { setAuditUserOnTrx } = require('../../utils/audit-context');
 
 function parseJsonIds(value) {
   if (!value) return [];
@@ -70,7 +71,10 @@ async function putSection(section, entries, userId) {
   if (!entries || !entries.length) {
     throw new ValidationError('entries must be a non-empty array');
   }
-  await db.transaction((trx) => repo.replaceSectionContent(trx, section, entries, userId));
+  await db.transaction(async (trx) => {
+    await setAuditUserOnTrx(trx, userId);
+    await repo.replaceSectionContent(trx, section, entries, userId);
+  });
   return getSection(section);
 }
 
@@ -82,26 +86,36 @@ async function listFaqsManage() {
   return repo.listFaqsManage();
 }
 
-async function createFaq(payload) {
-  return db.transaction((trx) => repo.insertFaq(trx, payload));
+async function createFaq(payload, userId) {
+  return db.transaction(async (trx) => {
+    await setAuditUserOnTrx(trx, userId);
+    return repo.insertFaq(trx, payload);
+  });
 }
 
-async function patchFaq(id, payload) {
+async function patchFaq(id, payload, userId) {
   return db.transaction(async (trx) => {
+    await setAuditUserOnTrx(trx, userId);
     const row = await repo.updateFaq(trx, id, payload);
     if (!row) throw new NotFoundError('FAQ not found');
     return row;
   });
 }
 
-async function removeFaq(id) {
-  const n = await db.transaction((trx) => repo.deleteFaq(trx, id));
+async function removeFaq(id, userId) {
+  const n = await db.transaction(async (trx) => {
+    await setAuditUserOnTrx(trx, userId);
+    return repo.deleteFaq(trx, id);
+  });
   if (!Number(n)) throw new NotFoundError('FAQ not found');
 }
 
-async function reorderFaqs(ids) {
+async function reorderFaqs(ids, userId) {
   if (!ids || !ids.length) throw new ValidationError('ids required');
-  await db.transaction((trx) => repo.reorderFaqs(trx, ids));
+  await db.transaction(async (trx) => {
+    await setAuditUserOnTrx(trx, userId);
+    await repo.reorderFaqs(trx, ids);
+  });
 }
 
 module.exports = {

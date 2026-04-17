@@ -59,7 +59,7 @@ async function getFaqsManage(req, res, next) {
 async function postFaq(req, res, next) {
   try {
     const body = validate(createFaqSchema, req.body);
-    const data = await cmsService.createFaq(body);
+    const data = await cmsService.createFaq(body, req.user?.id);
     return res.status(201).json({ data });
   } catch (err) {
     return next(err);
@@ -69,7 +69,7 @@ async function postFaq(req, res, next) {
 async function putFaq(req, res, next) {
   try {
     const body = validate(patchFaqSchema, req.body);
-    const data = await cmsService.patchFaq(req.params.id, body);
+    const data = await cmsService.patchFaq(req.params.id, body, req.user?.id);
     return res.status(200).json({ data });
   } catch (err) {
     return next(err);
@@ -78,7 +78,7 @@ async function putFaq(req, res, next) {
 
 async function deleteFaq(req, res, next) {
   try {
-    await cmsService.removeFaq(req.params.id);
+    await cmsService.removeFaq(req.params.id, req.user?.id);
     return res.status(204).send();
   } catch (err) {
     return next(err);
@@ -88,7 +88,7 @@ async function deleteFaq(req, res, next) {
 async function putFaqsReorder(req, res, next) {
   try {
     const body = validate(reorderFaqsSchema, req.body);
-    await cmsService.reorderFaqs(body.ids);
+    await cmsService.reorderFaqs(body.ids, req.user?.id);
     return res.status(200).json({ data: { ok: true } });
   } catch (err) {
     return next(err);
