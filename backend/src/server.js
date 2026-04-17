@@ -1,5 +1,6 @@
 const app = require('./app');
 const logger = require('./utils/logger');
+const { validateOptionalEnv } = require('./config/validate-env');
 
 // ── NFR-004: JWT secrets must be at least 64 characters ──────────────────────
 const JWT_SECRET = process.env.JWT_SECRET || '';
@@ -18,6 +19,8 @@ if (JWT_REFRESH_SECRET.length < 64) {
   });
   process.exit(1);
 }
+
+validateOptionalEnv();
 
 const PORT = process.env.PORT || 3000;
 

@@ -13,6 +13,12 @@ const swaggerDocument = {
       description: 'API base path',
     },
   ],
+  tags: [
+    { name: 'Payments', description: 'MercadoPago checkout, webhook, reconciliation' },
+    { name: 'Media', description: 'Media library and room/plan associations' },
+    { name: 'SiteContent', description: 'CMS site sections' },
+    { name: 'FAQs', description: 'Landing FAQs' },
+  ],
   paths: {
     '/v1/rooms': {
       get: {
@@ -160,6 +166,104 @@ const swaggerDocument = {
       get: {
         summary: 'Inventory movements report',
         tags: ['Reports'],
+        security: [{ BearerAuth: [] }],
+        responses: { 200: { description: 'OK' } },
+      },
+    },
+    '/v1/payments/create': {
+      post: {
+        summary: 'Create MercadoPago preference + payment_attempt',
+        tags: ['Payments'],
+        security: [{ BearerAuth: [] }],
+        parameters: [{ name: 'Idempotency-Key', in: 'header', required: true, schema: { type: 'string' } }],
+        responses: { 201: { description: 'Created' }, 503: { description: 'MP not configured' } },
+      },
+    },
+    '/v1/payments/webhook': {
+      post: {
+        summary: 'MercadoPago webhook (no JWT)',
+        tags: ['Payments'],
+        responses: { 200: { description: 'OK' } },
+      },
+    },
+    '/v1/payments/reconciliation': {
+      get: {
+        summary: 'Reconcile payment attempts vs MP',
+        tags: ['Payments'],
+        security: [{ BearerAuth: [] }],
+        responses: { 200: { description: 'OK' } },
+      },
+    },
+    '/v1/media/upload': {
+      post: {
+        summary: 'Upload media (multipart image)',
+        tags: ['Media'],
+        security: [{ BearerAuth: [] }],
+        responses: { 201: { description: 'Created' } },
+      },
+    },
+    '/v1/media': {
+      get: {
+        summary: 'List media library',
+        tags: ['Media'],
+        security: [{ BearerAuth: [] }],
+        responses: { 200: { description: 'OK' } },
+      },
+    },
+    '/v1/media/{id}': {
+      delete: {
+        summary: 'Delete unused media',
+        tags: ['Media'],
+        security: [{ BearerAuth: [] }],
+        responses: { 204: { description: 'Deleted' }, 409: { description: 'In use' } },
+      },
+    },
+    '/v1/site-content/public': {
+      get: {
+        summary: 'Public CMS bundle',
+        tags: ['SiteContent'],
+        responses: { 200: { description: 'OK' } },
+      },
+    },
+    '/v1/site-content/{section}': {
+      get: {
+        summary: 'Get site content section (admin)',
+        tags: ['SiteContent'],
+        security: [{ BearerAuth: [] }],
+        responses: { 200: { description: 'OK' } },
+      },
+      put: {
+        summary: 'Replace site content section',
+        tags: ['SiteContent'],
+        security: [{ BearerAuth: [] }],
+        responses: { 200: { description: 'OK' } },
+      },
+    },
+    '/v1/faqs': {
+      get: {
+        summary: 'Public active FAQs',
+        tags: ['FAQs'],
+        responses: { 200: { description: 'OK' } },
+      },
+      post: {
+        summary: 'Create FAQ',
+        tags: ['FAQs'],
+        security: [{ BearerAuth: [] }],
+        responses: { 201: { description: 'Created' } },
+      },
+    },
+    '/v1/faqs/manage': {
+      get: {
+        summary: 'List all FAQs (admin)',
+        tags: ['FAQs'],
+        security: [{ BearerAuth: [] }],
+        responses: { 200: { description: 'OK' } },
+      },
+    },
+    '/v1/faqs/reorder': {
+      put: {
+        summary: 'Reorder FAQs',
+        tags: ['FAQs'],
         security: [{ BearerAuth: [] }],
         responses: { 200: { description: 'OK' } },
       },

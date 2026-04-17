@@ -1,4 +1,5 @@
 require('dotenv').config();
+const path = require('path');
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const db = require('./config/database');
@@ -10,6 +11,10 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+// Medios locales: sirve `storage/public` (originals/, thumbnails/). Webhook MP usa JSON parseado
+// aquí arriba; la firma HMAC toma `data.id` de query o body según mp-webhook.verify.
+app.use('/uploads', express.static(path.join(__dirname, '..', 'storage', 'public')));
 
 // Request logging
 app.use((req, res, next) => {
@@ -58,9 +63,9 @@ app.use('/api/v1/suppliers', require('./modules/suppliers/suppliers.routes'));
 app.use('/api/v1/users', require('./modules/users/users.routes'));
 app.use('/api/v1/business-config', require('./modules/business-config/business-config.routes'));
 app.use('/api/v1/reports', require('./modules/reports/reports.routes'));
-// app.use('/api/v1/payments', require('./modules/payments/payments.routes'));
-// app.use('/api/v1/media', require('./modules/media/media.routes'));
-// app.use('/api/v1/cms', require('./modules/cms/cms.routes'));
+app.use('/api/v1/payments', require('./modules/payments/payments.routes'));
+app.use('/api/v1/media', require('./modules/media/media.routes'));
+app.use('/api/v1', require('./modules/cms/cms.routes'));
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
 app.use((req, res) => {
