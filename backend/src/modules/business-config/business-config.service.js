@@ -2,6 +2,7 @@
 
 const db = require('../../config/database');
 const { NotFoundError, ForbiddenError } = require('../../middlewares/error-handler');
+const { setAuditUserOnTrx } = require('../../utils/audit-context');
 
 function maskRow(row, role) {
   if (!row) return null;
@@ -35,8 +36,11 @@ async function updateConfig(payload, actor) {
     }
   }
 
-  const [row] = await db('business_config').where({ id: existing.id }).update(updates).returning('*');
-  return { data: maskRow(row, actor.role) };
+  return db.transaction(async (trx) => {
+    await setAuditUserOnTrx(trx, actor?.id);
+    const [row] = await trx('business_config').where({ id: existing.id }).update(updates).returning('*');
+    return { data: maskRow(row, actor.role) };
+  });
 }
 
 module.exports = { getConfig, updateConfig };

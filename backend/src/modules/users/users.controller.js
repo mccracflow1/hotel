@@ -1,7 +1,7 @@
 'use strict';
 
 const usersService = require('./users.service');
-const { createUserSchema, updateUserSchema, patchMeSchema } = require('./users.schema');
+const { createUserSchema, updateUserSchema, patchMeSchema, patchUserStatusSchema } = require('./users.schema');
 const { ValidationError } = require('../../middlewares/error-handler');
 
 function validate(schema, data) {
@@ -39,6 +39,16 @@ async function updateUser(req, res, next) {
   }
 }
 
+async function patchUserStatus(req, res, next) {
+  try {
+    const body = validate(patchUserStatusSchema, req.body);
+    const result = await usersService.patchUserStatus(req.params.id, body, req.user);
+    return res.status(200).json(result);
+  } catch (e) {
+    return next(e);
+  }
+}
+
 async function getMe(req, res, next) {
   try {
     const result = await usersService.getMe(req.user.id);
@@ -62,6 +72,7 @@ module.exports = {
   listUsers,
   createUser,
   updateUser,
+  patchUserStatus,
   getMe,
   patchMe,
 };

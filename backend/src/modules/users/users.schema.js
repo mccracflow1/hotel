@@ -26,4 +26,8 @@ const patchMeSchema = Joi.object({
   .min(1)
   .with('new_password', 'current_password');
 
-module.exports = { createUserSchema, updateUserSchema, patchMeSchema };
+const patchUserStatusSchema = Joi.object({
+  is_active: Joi.boolean().required(),
+});
+
+module.exports = { createUserSchema, updateUserSchema, patchMeSchema, patchUserStatusSchema };

@@ -3,6 +3,7 @@
 const bcrypt = require('bcrypt');
 const db = require('../../config/database');
 const { NotFoundError, ForbiddenError, ValidationError, UnauthorizedError } = require('../../middlewares/error-handler');
+const { setAuditUserOnTrx } = require('../../utils/audit-context');
 
 const SALT = 12;
 
@@ -20,16 +21,37 @@ async function assertCanManageRole(actorRole, targetRole) {
 async function createUser(payload, actor) {
   await assertCanManageRole(actor.role, payload.role);
   const password_hash = await bcrypt.hash(payload.password, SALT);
-  const [row] = await db('users')
-    .insert({
-      name: payload.name,
-      email: payload.email,
-      password_hash,
-      role: payload.role,
-      is_active: true,
-    })
-    .returning(['id', 'name', 'email', 'role', 'is_active', 'created_at']);
-  return { data: row };
+  return db.transaction(async (trx) => {
+    await setAuditUserOnTrx(trx, actor?.id);
+    const [row] = await trx('users')
+      .insert({
+        name: payload.name,
+        email: payload.email,
+        password_hash,
+        role: payload.role,
+        is_active: true,
+      })
+      .returning(['id', 'name', 'email', 'role', 'is_active', 'created_at']);
+    return { data: row };
+  });
+}
+
+async function patchUserStatus(id, payload, actor) {
+  const existing = await db('users').where({ id }).first();
+  if (!existing) throw new NotFoundError('User not found');
+  await assertCanManageRole(actor.role, existing.role);
+  if (existing.role === 'SUPER_ADMIN' && actor.role !== 'SUPER_ADMIN') {
+    throw new ForbiddenError('Only SUPER_ADMIN can change SUPER_ADMIN status');
+  }
+
+  return db.transaction(async (trx) => {
+    await setAuditUserOnTrx(trx, actor?.id);
+    const [row] = await trx('users')
+      .where({ id })
+      .update({ is_active: payload.is_active, updated_at: trx.fn.now() })
+      .returning(['id', 'name', 'email', 'role', 'is_active', 'updated_at']);
+    return { data: row };
+  });
 }
 
 async function updateUser(id, payload, actor) {
@@ -50,8 +72,11 @@ async function updateUser(id, payload, actor) {
   }
   updates.updated_at = db.fn.now();
 
-  const [row] = await db('users').where({ id }).update(updates).returning(['id', 'name', 'email', 'role', 'is_active', 'updated_at']);
-  return { data: row };
+  return db.transaction(async (trx) => {
+    await setAuditUserOnTrx(trx, actor?.id);
+    const [row] = await trx('users').where({ id }).update(updates).returning(['id', 'name', 'email', 'role', 'is_active', 'updated_at']);
+    return { data: row };
+  });
 }
 
 async function patchMe(userId, body) {
@@ -69,8 +94,11 @@ async function patchMe(userId, body) {
   }
 
   updates.updated_at = db.fn.now();
-  const [row] = await db('users').where({ id: userId }).update(updates).returning(['id', 'name', 'email', 'role', 'avatar_url']);
-  return { data: row };
+  return db.transaction(async (trx) => {
+    await setAuditUserOnTrx(trx, userId);
+    const [row] = await trx('users').where({ id: userId }).update(updates).returning(['id', 'name', 'email', 'role', 'avatar_url']);
+    return { data: row };
+  });
 }
 
 async function getMe(userId) {
@@ -84,6 +112,7 @@ module.exports = {
   listUsers,
   createUser,
   updateUser,
+  patchUserStatus,
   patchMe,
   getMe,
 };
