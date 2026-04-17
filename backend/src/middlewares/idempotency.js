@@ -10,6 +10,7 @@ const OPS = {
   RESERVATION_CANCEL: 'reservation:cancel',
   RESERVATION_OPTIONAL_ADD: 'reservation:optional-add',
   INVENTORY_MOVEMENT_CREATE: 'inventory:movement',
+  PAYMENT_CREATE: 'payment:create',
 };
 
 /**
@@ -44,6 +45,7 @@ const idempotencyReservationUpdate = idempotencyStrict(OPS.RESERVATION_UPDATE);
 const idempotencyReservationCancel = idempotencyStrict(OPS.RESERVATION_CANCEL);
 const idempotencyReservationOptionalAdd = idempotencyStrict(OPS.RESERVATION_OPTIONAL_ADD);
 const idempotencyInventoryMovement = idempotencyStrict(OPS.INVENTORY_MOVEMENT_CREATE);
+const idempotencyPaymentCreate = idempotencyStrict(OPS.PAYMENT_CREATE);
 
 async function runIdempotency(req, res, next, options) {
   const { requireKey, failClosed, operation } = options;
@@ -132,6 +134,7 @@ module.exports = {
   idempotencyReservationCancel,
   idempotencyReservationOptionalAdd,
   idempotencyInventoryMovement,
+  idempotencyPaymentCreate,
   idempotencyStrict,
   OPS,
 };
