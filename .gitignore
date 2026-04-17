@@ -29,3 +29,6 @@ coverage/
 
 # Knex
 *.sqlite
+
+# Local media uploads (005)
+backend/storage/
