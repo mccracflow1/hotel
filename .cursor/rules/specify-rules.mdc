@@ -10,6 +10,8 @@ Auto-generated from all feature plans. Last updated: 2026-04-17
 ## Active Technologies
 - Node.js 20 LTS (Backend), Angular 17+ (Admin), HTML5/Tailwind (Landing) (005-payments-media-cms)
 - PostgreSQL 14+ (ACID compliant) (005-payments-media-cms)
+- Node.js 20 LTS (backend), Angular 20+ standalone (admin-portal), HTML5 + Tailwind CDN (landing-page) + Express 5, Knex, PostgreSQL 14+, Angular Material, RxJS, Sharp/S3 (media pipeline) (005-payments-media-cms)
+- PostgreSQL (fuente de verdad), S3 o almacenamiento local para blobs de medios (005-payments-media-cms)
 
 
 
@@ -29,6 +31,7 @@ tests/
 General: Follow standard conventions
 
 ## Recent Changes
+- 005-payments-media-cms: Added Node.js 20 LTS (backend), Angular 20+ standalone (admin-portal), HTML5 + Tailwind CDN (landing-page) + Express 5, Knex, PostgreSQL 14+, Angular Material, RxJS, Sharp/S3 (media pipeline)
 - 005-payments-media-cms: Added Node.js 20 LTS (Backend), Angular 17+ (Admin), HTML5/Tailwind (Landing)
 
 
