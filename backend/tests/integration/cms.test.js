@@ -49,6 +49,7 @@ describeIntegration('CMS (005)', () => {
     const put = await request(app)
       .put('/api/v1/site-content/hero')
       .set('Authorization', `Bearer ${token(adminId)}`)
+      .set('Idempotency-Key', randomUUID())
       .send({ entries: [{ key: 'title', value: title, type: 'text' }] });
     expect(put.status).toBe(200);
 
@@ -95,6 +96,7 @@ describeIntegration('CMS (005)', () => {
     const res = await request(app)
       .put('/api/v1/site-content/hero')
       .set('Authorization', `Bearer ${token(viewerId)}`)
+      .set('Idempotency-Key', randomUUID())
       .send({ entries: [{ key: 'title', value: 'x', type: 'text' }] });
     expect(res.status).toBe(403);
   });

@@ -70,16 +70,35 @@ describeIntegration('Media (005)', () => {
     const res = await request(app)
       .post('/api/v1/media/upload')
       .set('Authorization', `Bearer ${token(adminId)}`)
+      .set('Idempotency-Key', randomUUID())
       .attach('file', png1x1, { filename: 't.png', contentType: 'image/png' });
     expect(res.status).toBe(201);
     expect(res.body.data.thumbnail_url).toBeTruthy();
     mediaId = res.body.data.id;
   });
 
+  it('GET /media/:id/usage → total 0 sin referencias', async () => {
+    const res = await request(app)
+      .get(`/api/v1/media/${mediaId}/usage`)
+      .set('Authorization', `Bearer ${token(adminId)}`);
+    expect(res.status).toBe(200);
+    expect(res.body.data.total).toBe(0);
+  });
+
+  it('PATCH /media/:id renombra filename', async () => {
+    const res = await request(app)
+      .patch(`/api/v1/media/${mediaId}`)
+      .set('Authorization', `Bearer ${token(adminId)}`)
+      .send({ filename: 'renamed-test.png' });
+    expect(res.status).toBe(200);
+    expect(res.body.data.filename).toBe('renamed-test.png');
+  });
+
   it('VIEWER no puede subir (SC-006)', async () => {
     const res = await request(app)
       .post('/api/v1/media/upload')
       .set('Authorization', `Bearer ${token(viewerId)}`)
+      .set('Idempotency-Key', randomUUID())
       .attach('file', png1x1, { filename: 't.png', contentType: 'image/png' });
     expect(res.status).toBe(403);
   });
@@ -94,5 +113,6 @@ describeIntegration('Media (005)', () => {
       .delete(`/api/v1/media/${mediaId}`)
       .set('Authorization', `Bearer ${token(adminId)}`);
     expect(del.status).toBe(409);
+    expect(del.body.error?.details?.total).toBeGreaterThan(0);
   });
 });
