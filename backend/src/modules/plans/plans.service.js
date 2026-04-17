@@ -30,6 +30,40 @@ function mapPlanRow(p) {
   };
 }
 
+function mapPlanDetailPayload(d) {
+  if (!d) return null;
+  const opts = d.optional_activities || [];
+  return {
+    ...mapPlanRow(d.plan),
+    base_activities: d.base_activities || [],
+    optional_activities: opts.map((o) => ({
+      ...o,
+      price: Number(o.price),
+    })),
+    media: (d.media || []).map((m) => ({
+      id: m.id,
+      filename: m.filename,
+      original_url: m.original_url,
+      thumbnail_url: m.thumbnail_url,
+      file_type: m.file_type,
+      mime_type: m.mime_type,
+      is_cover: m.is_cover,
+      sort_order: m.sort_order,
+    })),
+    room: d.room
+      ? {
+          id: d.room.id,
+          name: d.room.name,
+          slug: d.room.slug,
+          description: d.room.description,
+          capacity: d.room.capacity,
+          base_price: d.room.base_price != null ? Number(d.room.base_price) : d.room.base_price,
+          type: d.room.type,
+        }
+      : null,
+  };
+}
+
 async function createPlan(payload, userId) {
   return db.transaction(async (trx) => {
     await setAuditUserOnTrx(trx, userId);
@@ -126,15 +160,13 @@ module.exports = {
   listAdmin: (q) => repo.listPlansAdmin(q).then((rows) => rows.map(mapPlanRow)),
   getDetail: async (id) => {
     const d = await repo.getPlanDetail(id);
-    if (!d) return null;
-    return {
-      ...mapPlanRow(d.plan),
-      base_activities: d.base_activities,
-      optional_activities: d.optional_activities.map((o) => ({
-        ...o,
-        price: Number(o.price),
-      })),
-    };
+    return mapPlanDetailPayload(d);
+  },
+  getDetailBySlug: async (slug) => {
+    const row = await repo.findPlanBySlug(slug);
+    if (!row) return null;
+    const d = await repo.getPlanDetail(row.id);
+    return mapPlanDetailPayload(d);
   },
   linkOptional: (planId, body, userId) =>
     db.transaction(async (trx) => {

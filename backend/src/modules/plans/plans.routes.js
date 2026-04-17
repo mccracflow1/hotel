@@ -10,6 +10,8 @@ router.get('/', optionalAuth, plansController.listPlans);
 
 router.post('/', authGuard, requireRoles('ADMIN', 'SUPER_ADMIN'), plansController.createPlan);
 
+router.get('/by-slug/:slug', optionalAuth, plansController.getPlanBySlug);
+
 router.get('/:id', optionalAuth, plansController.getPlan);
 
 router.post('/:id/media', authGuard, requireRoles('ADMIN', 'SUPER_ADMIN'), plansController.postPlanMedia);

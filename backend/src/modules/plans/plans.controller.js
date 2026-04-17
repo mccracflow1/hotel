@@ -50,6 +50,19 @@ async function getPlan(req, res, next) {
   }
 }
 
+async function getPlanBySlug(req, res, next) {
+  try {
+    const data = await plansService.getDetailBySlug(req.params.slug);
+    if (!data) return next(new NotFoundError('Plan not found'));
+    if (!data.is_active && !canManagePlans(req.user)) {
+      return next(new NotFoundError('Plan not found'));
+    }
+    return res.status(200).json({ data });
+  } catch (err) {
+    return next(err);
+  }
+}
+
 async function createPlan(req, res, next) {
   try {
     if (!canManagePlans(req.user)) throw new ForbiddenError('FORBIDDEN');
@@ -175,6 +188,7 @@ async function deletePlanMedia(req, res, next) {
 module.exports = {
   listPlans,
   getPlan,
+  getPlanBySlug,
   createPlan,
   patchPlan,
   postReorder,

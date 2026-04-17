@@ -39,6 +39,11 @@ async function findPlanById(trx, id, { includeDeleted = false } = {}) {
   return q.first();
 }
 
+/** Active plan by URL slug (public marketing detail). */
+async function findPlanBySlug(slug) {
+  return db('plans').where({ slug: String(slug) }).whereNull('deleted_at').first();
+}
+
 async function listPlansPublic() {
   return db('plans')
     .whereNull('deleted_at')
@@ -72,7 +77,32 @@ async function getPlanDetail(id) {
     if (a.is_default !== b.is_default) return a.is_default ? -1 : 1;
     return String(a.name).localeCompare(String(b.name));
   });
-  return { plan, base_activities: baseActs, optional_activities: optionals };
+
+  const media = await db('plan_media as pm')
+    .join('media_library as ml', 'ml.id', 'pm.media_id')
+    .where('pm.plan_id', id)
+    .select(
+      'ml.id',
+      'ml.filename',
+      'ml.original_url',
+      'ml.thumbnail_url',
+      'ml.file_type',
+      'ml.mime_type',
+      'pm.is_cover',
+      'pm.sort_order'
+    )
+    .orderBy('pm.sort_order', 'asc');
+
+  let room = null;
+  if (plan.room_id) {
+    room = await db('rooms')
+      .where({ id: plan.room_id })
+      .whereNull('deleted_at')
+      .select('id', 'name', 'slug', 'description', 'capacity', 'base_price', 'type')
+      .first();
+  }
+
+  return { plan, base_activities: baseActs, optional_activities: optionals, media, room };
 }
 
 async function updatePlanSortOrders(trx, planId, orderedIds) {
@@ -218,6 +248,7 @@ module.exports = {
   insertPlan,
   insertPlanActivities,
   findPlanById,
+  findPlanBySlug,
   listPlansPublic,
   listPlansAdmin,
   getPlanDetail,
