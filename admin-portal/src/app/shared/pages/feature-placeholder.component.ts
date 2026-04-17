@@ -12,7 +12,7 @@ import { MatCardModule } from '@angular/material/card';
         <mat-card-title>{{ title() }}</mat-card-title>
       </mat-card-header>
       <mat-card-content>
-        <p>Módulo en curso (Semana 7). Navegación y RBAC ya cableados.</p>
+        <p>Módulo en curso (Semana 8). Navegación y RBAC ya cableados.</p>
       </mat-card-content>
     </mat-card>
   `,

@@ -22,4 +22,8 @@ export class RoomsService {
   patchRoom(id: string, body: unknown): Observable<unknown> {
     return this.http.patch(`${this.apiUrl}/rooms/${id}`, body);
   }
+
+  getRoom(id: string): Observable<unknown> {
+    return this.http.get(`${this.apiUrl}/rooms/${id}`);
+  }
 }

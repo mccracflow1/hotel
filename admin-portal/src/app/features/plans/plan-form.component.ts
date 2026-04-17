@@ -9,12 +9,14 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { PlansService } from './plans.service';
 import { injectPlanMediaLinker } from './plan-media.helper';
 import { PlanActivitiesComponent } from './plan-activities.component';
 import { PlanOptionalsSectionComponent } from './plan-optionals-section.component';
 import { PlanPricePreviewComponent } from './plan-price-preview.component';
+import { MediaPickerDialogComponent } from '../../shared/media-picker/media-picker-dialog.component';
 
 @Component({
   selector: 'app-plan-form',
@@ -29,6 +31,7 @@ import { PlanPricePreviewComponent } from './plan-price-preview.component';
     MatTabsModule,
     MatSnackBarModule,
     MatProgressSpinnerModule,
+    MatDialogModule,
     PlanActivitiesComponent,
     PlanOptionalsSectionComponent,
     PlanPricePreviewComponent,
@@ -74,6 +77,7 @@ import { PlanPricePreviewComponent } from './plan-price-preview.component';
                 <mat-label>Enlazar media (UUID)</mat-label>
                 <input matInput [formControl]="mediaIdCtrl" placeholder="media_id" />
               </mat-form-field>
+              <button mat-stroked-button type="button" (click)="pickMedia()">Biblioteca</button>
               <button mat-stroked-button type="button" (click)="linkMedia()" [disabled]="!planId() || !mediaIdCtrl.value">
                 Asociar media
               </button>
@@ -123,6 +127,7 @@ export class PlanFormComponent {
   private readonly router = inject(Router);
   private readonly plans = inject(PlansService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly dialog = inject(MatDialog);
   private readonly linkMediaFn = injectPlanMediaLinker();
 
   readonly planId = toSignal(this.route.paramMap.pipe(map((p) => p.get('id'))), { initialValue: null });
@@ -181,6 +186,12 @@ export class PlanFormComponent {
           });
         }
       },
+    });
+  }
+
+  pickMedia(): void {
+    this.dialog.open(MediaPickerDialogComponent, { width: '720px' }).afterClosed().subscribe((row) => {
+      if (row?.id) this.mediaIdCtrl.setValue(row.id);
     });
   }
 
