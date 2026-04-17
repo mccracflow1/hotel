@@ -10,7 +10,7 @@ import { MatTableModule } from '@angular/material/table';
     <table mat-table [dataSource]="rows()" class="mat-elevation-z1">
       @for (col of columns(); track col) {
         <ng-container [matColumnDef]="col">
-          <th mat-header-cell *matHeaderCellDef>{{ labels()[col] ?? col }}</th>
+          <th mat-header-cell *matHeaderCellDef>{{ labels()[col] || col }}</th>
           <td mat-cell *matCellDef="let row">{{ row[col] }}</td>
         </ng-container>
       }

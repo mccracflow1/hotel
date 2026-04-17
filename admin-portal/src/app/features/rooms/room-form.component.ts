@@ -5,13 +5,23 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatSelectModule } from '@angular/material/select';
 import { RoomsService } from './rooms.service';
 import { ToastService } from '../../shared/ui/toast.service';
+
+const ROOM_TYPES = ['cabin', 'room', 'pasadia', 'additional'] as const;
 
 @Component({
   selector: 'app-room-form',
   standalone: true,
-  imports: [ReactiveFormsModule, MatCardModule, MatFormFieldModule, MatInputModule, MatButtonModule],
+  imports: [
+    ReactiveFormsModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatSelectModule,
+  ],
   template: `
     <mat-card>
       <mat-card-header>
@@ -24,12 +34,20 @@ import { ToastService } from '../../shared/ui/toast.service';
             <input matInput formControlName="name" />
           </mat-form-field>
           <mat-form-field appearance="outline" class="full">
-            <mat-label>Slug</mat-label>
+            <mat-label>Slug (opcional)</mat-label>
             <input matInput formControlName="slug" />
           </mat-form-field>
           <mat-form-field appearance="outline" class="full">
             <mat-label>Tipo</mat-label>
-            <input matInput formControlName="type" />
+            <mat-select formControlName="type">
+              @for (t of roomTypes; track t) {
+                <mat-option [value]="t">{{ t }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Capacidad</mat-label>
+            <input matInput type="number" formControlName="capacity" />
           </mat-form-field>
           <mat-form-field appearance="outline" class="full">
             <mat-label>Precio base</mat-label>
@@ -63,13 +81,15 @@ export class RoomFormComponent {
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
 
+  readonly roomTypes = ROOM_TYPES;
   readonly id = signal<string | null>(null);
   readonly saving = signal(false);
 
   readonly form = this.fb.nonNullable.group({
     name: ['', Validators.required],
-    slug: ['', Validators.required],
-    type: ['STANDARD', Validators.required],
+    slug: [''],
+    type: ['room', Validators.required],
+    capacity: [2, [Validators.required, Validators.min(1)]],
     base_price: [0, [Validators.required, Validators.min(0)]],
     description: [''],
   });
@@ -82,10 +102,16 @@ export class RoomFormComponent {
   save(): void {
     if (this.form.invalid) return;
     this.saving.set(true);
-    const body = this.form.getRawValue();
-    const obs = this.id()
-      ? this.rooms.patchRoom(this.id()!, body)
-      : this.rooms.createRoom(body);
+    const raw = this.form.getRawValue();
+    const body: Record<string, unknown> = {
+      name: raw.name,
+      type: raw.type,
+      capacity: raw.capacity,
+      base_price: raw.base_price,
+      description: raw.description || null,
+    };
+    if (raw.slug?.trim()) body['slug'] = raw.slug.trim();
+    const obs = this.id() ? this.rooms.patchRoom(this.id()!, body) : this.rooms.createRoom(body);
     obs.subscribe({
       next: () => {
         this.toast.success('Guardado');
