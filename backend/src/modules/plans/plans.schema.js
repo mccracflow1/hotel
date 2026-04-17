@@ -50,6 +50,12 @@ const reorderActivitiesSchema = Joi.object({
   ordered_activity_ids: Joi.array().items(Joi.string().uuid()).min(1).required(),
 });
 
+const linkPlanMediaSchema = Joi.object({
+  media_id: Joi.string().uuid().required(),
+  is_cover: Joi.boolean().optional(),
+  sort_order: Joi.number().integer().min(0).optional(),
+});
+
 const linkOptionalSchema = Joi.object({
   optional_activity_id: Joi.string().uuid().required(),
   is_default: Joi.boolean().default(false),
@@ -85,6 +91,7 @@ module.exports = {
   createPlanSchema,
   patchPlanSchema,
   reorderActivitiesSchema,
+  linkPlanMediaSchema,
   linkOptionalSchema,
   createOptionalActivitySchema,
   patchOptionalActivitySchema,

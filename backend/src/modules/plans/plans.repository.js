@@ -195,6 +195,25 @@ async function unlinkOptionalFromPlan(trx, planId, optionalId) {
   return trx('plan_optional_activities').where({ plan_id: planId, optional_activity_id: optionalId }).delete();
 }
 
+async function linkPlanMedia(trx, planId, mediaId, { is_cover = false, sort_order = 0 } = {}) {
+  await trx('plan_media')
+    .insert({
+      plan_id: planId,
+      media_id: mediaId,
+      is_cover: !!is_cover,
+      sort_order: sort_order ?? 0,
+    })
+    .onConflict(['plan_id', 'media_id'])
+    .merge({
+      is_cover: !!is_cover,
+      sort_order: sort_order ?? 0,
+    });
+}
+
+async function unlinkPlanMedia(trx, planId, mediaId) {
+  return trx('plan_media').where({ plan_id: planId, media_id: mediaId }).delete();
+}
+
 module.exports = {
   insertPlan,
   insertPlanActivities,
@@ -211,4 +230,6 @@ module.exports = {
   updateOptionalActivity,
   linkOptionalToPlan,
   unlinkOptionalFromPlan,
+  linkPlanMedia,
+  unlinkPlanMedia,
 };

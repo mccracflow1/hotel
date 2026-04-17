@@ -1,11 +1,14 @@
 'use strict';
 
+const db = require('../../config/database');
+const plansRepo = require('./plans.repository');
 const plansService = require('./plans.service');
 const {
   createPlanSchema,
   patchPlanSchema,
   reorderActivitiesSchema,
   linkOptionalSchema,
+  linkPlanMediaSchema,
 } = require('./plans.schema');
 const { ValidationError, ForbiddenError, NotFoundError } = require('../../middlewares/error-handler');
 
@@ -136,6 +139,39 @@ async function deleteLinkOptional(req, res, next) {
   }
 }
 
+async function postPlanMedia(req, res, next) {
+  try {
+    if (!canManagePlans(req.user)) throw new ForbiddenError('FORBIDDEN');
+    const body = validate(linkPlanMediaSchema, req.body);
+    await db.transaction(async (trx) => {
+      const plan = await trx('plans').where({ id: req.params.id }).whereNull('deleted_at').first();
+      if (!plan) throw new NotFoundError('Plan not found');
+      const m = await trx('media_library').where({ id: body.media_id }).first();
+      if (!m) throw new NotFoundError('Media not found');
+      await plansRepo.linkPlanMedia(trx, req.params.id, body.media_id, {
+        is_cover: body.is_cover,
+        sort_order: body.sort_order,
+      });
+    });
+    return res.status(201).json({ data: { plan_id: req.params.id, media_id: body.media_id } });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function deletePlanMedia(req, res, next) {
+  try {
+    if (!canManagePlans(req.user)) throw new ForbiddenError('FORBIDDEN');
+    const n = await db.transaction((trx) =>
+      plansRepo.unlinkPlanMedia(trx, req.params.id, req.params.mediaId)
+    );
+    if (!n) return next(new NotFoundError('Association not found'));
+    return res.status(204).send();
+  } catch (err) {
+    return next(err);
+  }
+}
+
 module.exports = {
   listPlans,
   getPlan,
@@ -147,4 +183,6 @@ module.exports = {
   postClone,
   postLinkOptional,
   deleteLinkOptional,
+  postPlanMedia,
+  deletePlanMedia,
 };
