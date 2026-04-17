@@ -33,8 +33,8 @@ exports.up = async function (knex) {
     table.uuid('created_by').nullable().references('id').inTable('users').onDelete('SET NULL');
     // Para bloqueo optimista como fallback
     table.integer('version').notNullable().defaultTo(0);
-    table.timestamptz('created_at').notNullable().defaultTo(knex.fn.now());
-    table.timestamptz('updated_at').nullable();
+    table.timestamp('created_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
+    table.timestamp('updated_at', { useTz: true }).nullable();
   });
 
   // reservation_activity_snapshot: COPIA INMUTABLE de actividades base al momento de reservar

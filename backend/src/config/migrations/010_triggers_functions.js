@@ -71,19 +71,24 @@ exports.up = async function (knex) {
 
   // ── pg_cron: limpieza de idempotency_keys expiradas cada hora ────────────
   // pg_cron debe estar instalado en PostgreSQL (disponible en Railway y la mayoría
-  // de proveedores managed). Si no está disponible, este bloque se omite silenciosamente.
-  try {
-    await knex.raw(`
-      SELECT cron.schedule(
-        'cleanup-idempotency-keys',
-        '0 * * * *',
-        $$ DELETE FROM idempotency_keys WHERE expires_at < NOW() $$
-      )
-    `);
-  } catch {
-    // pg_cron no disponible en este entorno; la limpieza se hará manualmente
-    // o con un worker de Node.js en Semana 2.
-  }
+  // de proveedores managed). Si no está disponible, el bloque DO captura la
+  // excepción a nivel Postgres y no aborta la transacción de la migración.
+  await knex.raw(`
+    DO $$
+    BEGIN
+      IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
+        PERFORM cron.schedule(
+          'cleanup-idempotency-keys',
+          '0 * * * *',
+          $job$ DELETE FROM idempotency_keys WHERE expires_at < NOW() $job$
+        );
+      END IF;
+    EXCEPTION WHEN OTHERS THEN
+      -- pg_cron no disponible o sin permiso: limpieza se delega a un worker de Node.
+      NULL;
+    END;
+    $$;
+  `);
 };
 
 exports.down = async function (knex) {

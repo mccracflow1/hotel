@@ -29,7 +29,7 @@ exports.up = async function (knex) {
     table.string('mime_type', 80).nullable();
     table.bigInteger('size_bytes').nullable();
     table.uuid('uploaded_by').nullable().references('id').inTable('users').onDelete('SET NULL');
-    table.timestamptz('created_at').notNullable().defaultTo(knex.fn.now());
+    table.timestamp('created_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
   });
 
   // rooms: habitaciones, cabañas y servicios del hotel
@@ -44,9 +44,9 @@ exports.up = async function (knex) {
     table.jsonb('amenities').notNullable().defaultTo('[]');
     table.boolean('is_active').notNullable().defaultTo(true);
     table.smallint('sort_order').notNullable().defaultTo(0);
-    table.timestamptz('deleted_at').nullable();
-    table.timestamptz('created_at').notNullable().defaultTo(knex.fn.now());
-    table.timestamptz('updated_at').nullable();
+    table.timestamp('deleted_at', { useTz: true }).nullable();
+    table.timestamp('created_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
+    table.timestamp('updated_at', { useTz: true }).nullable();
   });
 
   // room_media: relación N:N rooms ↔ media_library

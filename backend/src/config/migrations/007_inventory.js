@@ -25,7 +25,7 @@ exports.up = async function (knex) {
     table.text('address').nullable();
     table.text('notes').nullable();
     table.boolean('is_active').notNullable().defaultTo(true);
-    table.timestamptz('created_at').notNullable().defaultTo(knex.fn.now());
+    table.timestamp('created_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
   });
 
   // inventory_items: ítems del inventario del hotel
@@ -38,8 +38,8 @@ exports.up = async function (knex) {
     table.decimal('min_stock', 10, 3).notNullable().defaultTo(0);
     table.uuid('supplier_id').nullable().references('id').inTable('suppliers').onDelete('SET NULL');
     table.boolean('is_active').notNullable().defaultTo(true);
-    table.timestamptz('created_at').notNullable().defaultTo(knex.fn.now());
-    table.timestamptz('updated_at').nullable();
+    table.timestamp('created_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
+    table.timestamp('updated_at', { useTz: true }).nullable();
   });
 
   // inventory_movements: cada entrada, salida o ajuste de inventario
@@ -62,7 +62,7 @@ exports.up = async function (knex) {
       .inTable('reservations')
       .onDelete('SET NULL');
     table.uuid('created_by').nullable().references('id').inTable('users').onDelete('SET NULL');
-    table.timestamptz('created_at').notNullable().defaultTo(knex.fn.now());
+    table.timestamp('created_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
   });
 
   await knex.schema.table('inventory_movements', (table) => {

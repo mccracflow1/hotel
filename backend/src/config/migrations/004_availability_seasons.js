@@ -10,7 +10,7 @@ exports.up = async function (knex) {
     table.date('date_end').notNullable();
     // 1.0 = precio normal, 1.4 = +40%
     table.decimal('price_multiplier', 4, 2).notNullable().defaultTo(1.0);
-    table.timestamptz('created_at').notNullable().defaultTo(knex.fn.now());
+    table.timestamp('created_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
   });
 
   // availability: cupos por fecha, habitación y/o plan
@@ -24,7 +24,7 @@ exports.up = async function (knex) {
     table.string('block_reason', 200).nullable();
     // override de precio para ese día específico
     table.decimal('special_price', 12, 2).nullable();
-    table.timestamptz('created_at').notNullable().defaultTo(knex.fn.now());
+    table.timestamp('created_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
   });
 
   // Índice para el query más frecuente del sistema

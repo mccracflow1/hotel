@@ -19,17 +19,17 @@ exports.up = async function (knex) {
     table.specificType('role', 'user_role').notNullable().defaultTo('VIEWER');
     table.text('avatar_url').nullable();
     table.boolean('is_active').notNullable().defaultTo(true);
-    table.timestamptz('last_login_at').nullable();
-    table.timestamptz('created_at').notNullable().defaultTo(knex.fn.now());
-    table.timestamptz('updated_at').nullable();
+    table.timestamp('last_login_at', { useTz: true }).nullable();
+    table.timestamp('created_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
+    table.timestamp('updated_at', { useTz: true }).nullable();
   });
 
   await knex.schema.createTable('refresh_tokens', (table) => {
     table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
     table.uuid('user_id').notNullable().references('id').inTable('users').onDelete('CASCADE');
     table.string('token_hash', 255).notNullable().unique();
-    table.timestamptz('expires_at').notNullable();
-    table.timestamptz('created_at').notNullable().defaultTo(knex.fn.now());
+    table.timestamp('expires_at', { useTz: true }).notNullable();
+    table.timestamp('created_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
   });
 
   await knex.schema.table('refresh_tokens', (table) => {

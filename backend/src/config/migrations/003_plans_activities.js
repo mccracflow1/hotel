@@ -25,9 +25,9 @@ exports.up = async function (knex) {
     table.uuid('room_id').nullable().references('id').inTable('rooms').onDelete('SET NULL');
     table.boolean('is_active').notNullable().defaultTo(true);
     table.smallint('sort_order').notNullable().defaultTo(0);
-    table.timestamptz('deleted_at').nullable();
-    table.timestamptz('created_at').notNullable().defaultTo(knex.fn.now());
-    table.timestamptz('updated_at').nullable();
+    table.timestamp('deleted_at', { useTz: true }).nullable();
+    table.timestamp('created_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
+    table.timestamp('updated_at', { useTz: true }).nullable();
   });
 
   // plan_media: relación N:N plans ↔ media_library
@@ -47,7 +47,7 @@ exports.up = async function (knex) {
     table.text('description').nullable();
     table.decimal('extra_cost', 10, 2).notNullable().defaultTo(0);
     table.smallint('sort_order').notNullable().defaultTo(0);
-    table.timestamptz('created_at').notNullable().defaultTo(knex.fn.now());
+    table.timestamp('created_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
   });
 
   // optional_activities: catálogo GLOBAL de actividades opcionales del hotel
@@ -61,7 +61,7 @@ exports.up = async function (knex) {
     table.smallint('max_persons').nullable();
     table.uuid('media_id').nullable().references('id').inTable('media_library').onDelete('SET NULL');
     table.boolean('is_active').notNullable().defaultTo(true);
-    table.timestamptz('created_at').notNullable().defaultTo(knex.fn.now());
+    table.timestamp('created_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
   });
 
   // plan_optional_activities: qué opcionales están disponibles en cada plan

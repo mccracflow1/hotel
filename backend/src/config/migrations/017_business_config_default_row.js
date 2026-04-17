@@ -6,10 +6,10 @@ exports.up = async function (knex) {
   if (Number(n?.c || 0) === 0) {
     await knex('business_config').insert({
       hotel_name: 'Hotel',
-      cancellation_policy: [
+      cancellation_policy: JSON.stringify([
         { hours_before: 72, penalty_pct: 0 },
         { hours_before: 24, penalty_pct: 50 },
-      ],
+      ]),
     });
   }
 };

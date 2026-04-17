@@ -17,7 +17,7 @@ exports.up = async function (knex) {
     table.text('value').nullable();
     table.specificType('type', 'content_type').notNullable().defaultTo('text');
     table.uuid('updated_by').nullable().references('id').inTable('users').onDelete('SET NULL');
-    table.timestamptz('updated_at').notNullable().defaultTo(knex.fn.now());
+    table.timestamp('updated_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
     table.unique(['section', 'key']);
   });
 
@@ -28,8 +28,8 @@ exports.up = async function (knex) {
     table.text('answer').notNullable();
     table.smallint('sort_order').notNullable().defaultTo(0);
     table.boolean('is_active').notNullable().defaultTo(true);
-    table.timestamptz('created_at').notNullable().defaultTo(knex.fn.now());
-    table.timestamptz('updated_at').nullable();
+    table.timestamp('created_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
+    table.timestamp('updated_at', { useTz: true }).nullable();
   });
 
   // business_config: configuración global del negocio (una sola fila)
@@ -48,7 +48,7 @@ exports.up = async function (knex) {
     table.text('mp_webhook_secret').nullable();
     table.text('logo_url').nullable();
     table.specificType('primary_color', 'char(7)').nullable(); // HEX ej: '#1A3A5C'
-    table.timestamptz('updated_at').notNullable().defaultTo(knex.fn.now());
+    table.timestamp('updated_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
   });
 
   // audit_logs: registro inmutable de acciones críticas
@@ -61,7 +61,7 @@ exports.up = async function (knex) {
     table.jsonb('old_data').nullable();
     table.jsonb('new_data').nullable();
     table.specificType('ip_address', 'inet').nullable();
-    table.timestamptz('created_at').notNullable().defaultTo(knex.fn.now());
+    table.timestamp('created_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
   });
 
   await knex.schema.table('audit_logs', (table) => {

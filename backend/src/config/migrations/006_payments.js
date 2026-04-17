@@ -16,8 +16,8 @@ exports.up = async function (knex) {
     table.string('preference_id', 100).nullable();
     table.text('checkout_url').nullable();
     table.string('status', 30).notNullable().defaultTo('pending');
-    table.timestamptz('expires_at').nullable();
-    table.timestamptz('created_at').notNullable().defaultTo(knex.fn.now());
+    table.timestamp('expires_at', { useTz: true }).nullable();
+    table.timestamp('created_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
   });
 
   // payments: pagos CONFIRMADOS (un registro definitivo por reserva confirmada)
@@ -34,8 +34,8 @@ exports.up = async function (knex) {
     table.string('payment_method', 50).nullable(); // 'mercadopago_checkout', 'pse', 'manual'
     table.string('external_id', 100).nullable();   // ID del pago en MercadoPago
     table.string('status', 30).notNullable();       // 'confirmed', 'refunded', 'partial_refund'
-    table.timestamptz('confirmed_at').nullable();
-    table.timestamptz('created_at').notNullable().defaultTo(knex.fn.now());
+    table.timestamp('confirmed_at', { useTz: true }).nullable();
+    table.timestamp('created_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
   });
 
   // idempotency_keys: prevención de operaciones duplicadas en reservas y pagos
@@ -44,19 +44,20 @@ exports.up = async function (knex) {
     table.string('operation', 60).notNullable();
     table.smallint('response_status').nullable();
     table.jsonb('response_body').nullable();
-    table.timestamptz('created_at').notNullable().defaultTo(knex.fn.now());
+    table.timestamp('created_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
     // TTL 24 horas; pg_cron limpia cada hora las expiradas
     table
-      .timestamptz('expires_at')
+      .timestamp('expires_at', { useTz: true })
       .notNullable()
       .defaultTo(knex.raw("NOW() + INTERVAL '24 hours'"));
   });
 
-  // Índice parcial para búsqueda rápida de claves vigentes + cleanup automático
+  // Índice sobre expires_at para búsqueda rápida y cleanup por job programado.
+  // No se usa WHERE expires_at > NOW() porque NOW() no es IMMUTABLE
+  // y PostgreSQL no permite funciones volátiles en predicados de índice.
   await knex.raw(`
     CREATE INDEX idx_idempotency_expires
       ON idempotency_keys (expires_at)
-      WHERE expires_at > NOW()
   `);
 
   await knex.schema.table('payment_attempts', (table) => {
